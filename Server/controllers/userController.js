@@ -110,7 +110,7 @@ exports.verifySignupOtp = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-  
+
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ msg: "User not found" });
@@ -122,27 +122,24 @@ exports.login = async (req, res) => {
       return res.status(403).json({ msg: "Email not verified" });
     }
 
-    const token = generateClientToken(user._id);
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-    res.status(200).json({
+    // ✅ Save user session
+    req.session.user = {
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      token,
       isVerified: user.isVerified,
+    };
+
+    res.status(200).json({
+      ...req.session.user,
       msg: "Login successful",
     });
   } catch (err) {
     res.status(500).json({ msg: "Login error", error: err.message });
   }
 };
+
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -198,10 +195,25 @@ exports.resetPassword = async (req, res) => {
 }
 
 exports.logoutUser = async (req, res) => {
-  // Remove the token from the client side ( Frontend )
-  res.clearCookie("token");
-  res.status(200).json({
-    success: true,
-    message: "Logged out successfully, session cookie cleared",
+  req.session.destroy((err) => {
+    if (err) return res.status(500).json({ msg: "Logout failed" });
+    res.clearCookie("connect.sid"); // default session cookie name
+    res.status(200).json({ msg: "Logged out successfully" });
   });
+};
+
+exports.getSession = async (req, res) => {
+  try {
+    const user = await User.findById(req.session.user._id).select("-password -otp -otpExpires");
+
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    res.status(200).json({
+      user,
+      success: true,
+      msg: "Session retrieved successfully",
+    });
+  } catch (err) {
+    res.status(500).json({ msg: "Session error", error: err.message });
+  }
 };

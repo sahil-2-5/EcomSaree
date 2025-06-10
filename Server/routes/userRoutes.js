@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { AuthClientId } = require("../middlewares/authClientMiddleware");
+const { AuthClientId , isAuthenticated } = require("../middlewares/authClientMiddleware");
 const { validateEmail } = require("../validators/userValidator");
 
 // const {
@@ -16,7 +16,8 @@ const {
   forgotPassword,
   verifyResetOtp,
   resetPassword,
-  logoutUser
+  logoutUser,
+  getSession
 } = require("../controllers/userController"); 
 
 const {
@@ -63,6 +64,7 @@ router.post("/forgot-password", validateEmail, forgotPassword);
 router.post("/reset-password/verify-otp", verifyResetOtp);
 router.post("/reset-password", resetPassword);
 router.post("/logout", AuthClientId, logoutUser);
+router.get("/session", isAuthenticated, getSession);
 
 // Address Routes
 router.get("/addresses", AuthClientId, getAddresses);

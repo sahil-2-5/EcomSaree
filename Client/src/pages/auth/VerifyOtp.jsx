@@ -1,18 +1,26 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Button from '../../components/common/Button';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import Button from "../../components/common/Button";
 
 const VerifyOtp = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    otp: '',
-  });
+  const { verifyOtp } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const [formData, setFormData] = useState({
+    email: "",
+    otp: "",
+  });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Verify OTP:', formData);
-    navigate('/login');
+    try {
+      const data = await verifyOtp(formData);
+      alert(data.msg);
+      navigate("/login");
+    } catch (error) {
+      alert(error.response?.data?.msg || "Something went wrong.");
+    }
   };
 
   return (
@@ -33,7 +41,10 @@ const VerifyOtp = () => {
         <div className="bg-white/80 backdrop-blur-sm py-8 px-4 shadow-lg ring-1 ring-black/5 sm:rounded-xl sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email
               </label>
               <div className="mt-1">
@@ -45,13 +56,18 @@ const VerifyOtp = () => {
                   required
                   className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white/50 backdrop-blur-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700"
+              >
                 OTP
               </label>
               <div className="mt-1">
@@ -65,15 +81,17 @@ const VerifyOtp = () => {
                   required
                   className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white/50 backdrop-blur-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200"
                   value={formData.otp}
-                  onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, otp: e.target.value })
+                  }
                 />
               </div>
             </div>
 
             <div>
-              <Button 
-                type="submit" 
-                variant="primary" 
+              <Button
+                type="submit"
+                variant="primary"
                 className="w-full py-3 text-base font-medium shadow-lg hover:shadow-pink-500/20 transition-shadow duration-200"
               >
                 Verify OTP
@@ -81,8 +99,11 @@ const VerifyOtp = () => {
             </div>
 
             <div className="text-sm text-center">
-              <span className="text-gray-600">Didn't receive code?</span>{' '}
-              <button type="button" className="font-medium text-pink-600 hover:text-pink-500">
+              <span className="text-gray-600">Didn't receive code?</span>{" "}
+              <button
+                type="button"
+                className="font-medium text-pink-600 hover:text-pink-500"
+              >
                 Resend
               </button>
             </div>

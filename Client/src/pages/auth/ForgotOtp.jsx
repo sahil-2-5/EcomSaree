@@ -1,18 +1,27 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 
 const ForgotOtp = () => {
+
+  const { verifyResetOtp } = useAuth();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     email: '',
     otp: '',
   });
-  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Forgot OTP:', formData);
-    navigate('/reset-password');
+    try {
+      const response = verifyResetOtp(formData);
+      alert(response.msg || "OTP verified successfully");
+      navigate('/reset-password'); // Redirect to login after successful verification
+    } catch (err) {
+      alert(err.response?.data?.msg || "Verification failed. Try again.");
+    }
   };
 
   return (

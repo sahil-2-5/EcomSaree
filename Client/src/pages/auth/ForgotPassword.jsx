@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 
 const ForgotPassword = () => {
+  const { forgotPassword } = useAuth();
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     email: '',
   });
-  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Forgot Password:', formData);
-    navigate('/forgot-otp');
+    try {
+      const data = await forgotPassword(formData.email);
+      alert(data.msg); // or toast
+      navigate('/forgot-otp');
+    } catch (err) {
+      alert(err.response?.data?.msg || "Something went wrong");
+    }
   };
 
   return (

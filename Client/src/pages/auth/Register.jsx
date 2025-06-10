@@ -30,7 +30,7 @@ const Register = () => {
       alert(response.msg || "OTP sent to email");
       navigate("/verify-otp");
     } catch (err) {
-      alert("Registration failed. Try again.");
+      alert(err.response?.data?.msg || "Registration failed. Try again.");
     }
   };
 
@@ -59,7 +59,10 @@ const Register = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* First Name */}
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="firstName"
+                className="block text-sm font-medium text-gray-700"
+              >
                 First Name
               </label>
               <div className="mt-1">
@@ -80,7 +83,10 @@ const Register = () => {
 
             {/* Last Name */}
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Last Name
               </label>
               <div className="mt-1">
@@ -101,7 +107,10 @@ const Register = () => {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email address
               </label>
               <div className="mt-1">
@@ -122,7 +131,10 @@ const Register = () => {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1">
@@ -143,7 +155,10 @@ const Register = () => {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Confirm Password
               </label>
               <div className="mt-1">
@@ -156,7 +171,10 @@ const Register = () => {
                   className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg bg-white/50 backdrop-blur-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200"
                   value={formData.confirmPassword}
                   onChange={(e) =>
-                    setFormData({ ...formData, confirmPassword: e.target.value })
+                    setFormData({
+                      ...formData,
+                      confirmPassword: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -175,13 +193,22 @@ const Register = () => {
                   setFormData({ ...formData, agreedToTerms: e.target.checked })
                 }
               />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
+              <label
+                htmlFor="terms"
+                className="ml-2 block text-sm text-gray-900"
+              >
                 I agree to the{" "}
-                <Link to="/terms" className="font-medium text-pink-600 hover:text-pink-500">
+                <Link
+                  to="/terms"
+                  className="font-medium text-pink-600 hover:text-pink-500"
+                >
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link to="/privacy" className="font-medium text-pink-600 hover:text-pink-500">
+                <Link
+                  to="/privacy"
+                  className="font-medium text-pink-600 hover:text-pink-500"
+                >
                   Privacy Policy
                 </Link>
               </label>

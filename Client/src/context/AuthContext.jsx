@@ -1,69 +1,117 @@
-import React, { createContext, useContext, useState } from 'react';
-import axios from 'axios';
+// src/context/AuthContext.js
+import React, { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const register = async (userData) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await axios.post('/user/signup', {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        password: userData.password,
-        agreedToTerms: userData.agreedToTerms,
-      });
-
-      return response.data.mes;
-    }catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      const res = await axios.post(
+        "http://localhost:2525/user/signup",
+        userData,
+        {
+          withCredentials: true,
+        }
+      );
+      return res.data;
+    } catch (err) {
+      setError(err.response?.data?.msg || "Registration failed");
       throw err;
-    }finally {
+    } finally {
       setLoading(false);
     }
+  };
+
+  const verifyOtp = async (formData) => {
+    const res = await axios.post(
+      "http://localhost:2525/user/signup/verify-otp",
+      formData
+    );
+    return res.data;
   };
 
   const login = async (email, password) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      // Implement your login logic here
-      // For now, we'll just simulate a successful login
-      setUser({
-        id: 1,
-        email,
-        name: 'Test User',
-      });
+      const res = await axios.post(
+        "http://localhost:2525/user/login",
+        { email, password },
+        { withCredentials: true }
+      );
+      setUser(res.data);
+      return res.data;
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.msg || "Login failed");
+      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-  };
-
-  const updateProfile = async (userData) => {
+  const logout = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
-      // Implement your profile update logic here
-      setUser({ ...user, ...userData });
+      await axios.post(
+        "http://localhost:2525/user/logout",
+        {},
+        { withCredentials: true }
+      );
+      setUser(null);
     } catch (err) {
-      setError(err.message);
+      setError("Logout failed");
     } finally {
       setLoading(false);
     }
   };
+
+  const forgotPassword = async (email) => {
+    const res = await axios.post("http://localhost:2525/user/forgot-password", {
+      email,
+    });
+    return res.data;
+  };
+
+  const verifyResetOtp = async (formData) => {
+    const res = await axios.post(
+      "http://localhost:2525/user/forgot-password/verify-otp",
+      formData
+    );
+    return res.data;
+  };
+
+  const resetPassword = async (formData) => {
+    const res = await axios.post(
+      "http://localhost:2525/user/reset-password",
+      formData
+    );
+    return res.data;
+  };
+
+  // Load user session on page load
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const res = await axios.get("http://localhost:2525/user/session", {
+          withCredentials: true,
+        });
+        setUser(res.data.user);
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSession();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -71,11 +119,14 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         error,
-        login,
-        register,
-        logout,
-        updateProfile,
         isAuthenticated: !!user,
+        login,
+        logout,
+        register,
+        verifyOtp,
+        forgotPassword,
+        verifyResetOtp,
+        resetPassword,
       }}
     >
       {children}
@@ -83,12 +134,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export default AuthContext;
+export const useAuth = () => useContext(AuthContext);
