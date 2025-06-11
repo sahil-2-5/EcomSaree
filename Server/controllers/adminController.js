@@ -64,7 +64,7 @@ const resetAdminPasswordOTP = require("../utils/service/admin/resetAdminPassword
 exports.signup = async (req, res) => {
   const { firstName, lastName, email, password, agreedToTerms } = req.body;
   try {
-    if (!agreeToTerms) {
+    if (!agreedToTerms) {
       return res.status(400).json({
         msg: "You must agree to the Terms and Conditions and Privacy Policy",
       });

@@ -43,7 +43,10 @@ const adminSchema = new mongoose.Schema(
         message: "Agreement to Terms & Privacy Policy is required",
       },
     },
-    product: [productSchema],
+    products: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'  
+    }],
   },
   { timestamps: true }
 );

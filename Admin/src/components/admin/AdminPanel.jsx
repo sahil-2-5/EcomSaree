@@ -1,31 +1,33 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  FiHome, 
-  FiBox, 
-  FiShoppingBag, 
-  FiUsers, 
-  FiImage, 
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import LoginRequired from "../../pages/LoginRequired";
+import {
+  FiHome,
+  FiBox,
+  FiShoppingBag,
+  FiUsers,
+  FiImage,
   FiPackage,
   FiBarChart2,
   FiSettings,
   FiMenu,
   FiX,
   FiLogIn,
-  FiUserPlus
-} from 'react-icons/fi';
+  FiUserPlus,
+  FiLogOut,
+} from "react-icons/fi";
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const menuItems = [
-    { icon: FiHome, label: 'Dashboard', path: '/admin' },
-    { icon: FiBox, label: 'Products', path: '/admin/products' },
-    { icon: FiShoppingBag, label: 'Orders', path: '/admin/orders' },
-    { icon: FiUsers, label: 'Customers', path: '/admin/customers' },
-    { icon: FiImage, label: 'Banners', path: '/admin/banners' },
-    { icon: FiPackage, label: 'Inventory', path: '/admin/inventory' },
-    { icon: FiBarChart2, label: 'Reports', path: '/admin/reports' },
-    { icon: FiSettings, label: 'Settings', path: '/admin/settings' },
+    { icon: FiHome, label: "Dashboard", path: "/admin" },
+    { icon: FiBox, label: "Products", path: "/admin/products" },
+    { icon: FiShoppingBag, label: "Orders", path: "/admin/orders" },
+    { icon: FiUsers, label: "Customers", path: "/admin/customers" },
+    { icon: FiImage, label: "Banners", path: "/admin/banners" },
+    { icon: FiPackage, label: "Inventory", path: "/admin/inventory" },
+    { icon: FiBarChart2, label: "Reports", path: "/admin/reports" },
+    { icon: FiSettings, label: "Settings", path: "/admin/settings" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -43,7 +45,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-30 w-64 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="h-full flex flex-col">
@@ -70,8 +72,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                   to={item.path}
                   className={`flex items-center px-4 py-2 text-sm rounded-lg ${
                     isActive(item.path)
-                      ? 'bg-pink-50 text-pink-600'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? "bg-pink-50 text-pink-600"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-3" />
@@ -86,8 +88,33 @@ const Sidebar = ({ isOpen, onClose }) => {
   );
 };
 
-const AdminLayout = ({ children }) => {
+const AdminPanel = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      navigate("/admin");
+    } else {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:2525/admin/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      localStorage.removeItem("adminToken");
+      setIsAuthenticated(false);
+      navigate("/admin");
+    } catch (err) {
+      console.error("Logout failed", err);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -109,23 +136,34 @@ const AdminLayout = ({ children }) => {
                 Admin Dashboard
               </h1>
             </div>
-            
+
             <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Login and Register buttons - visible on all screens */}
-              <Link 
-                to="/admin/login" 
-                className="flex items-center px-3 py-1 text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors"
-              >
-                <FiLogIn className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">Login</span>
-              </Link>
-              <Link 
-                to="/admin/register" 
-                className="flex items-center px-3 py-1 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 transition-colors"
-              >
-                <FiUserPlus className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">Register</span>
-              </Link>
+              {!isAuthenticated ? (
+                <>
+                  <Link
+                    to="/admin/login"
+                    className="flex items-center px-3 py-1 text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors"
+                  >
+                    <FiLogIn className="w-4 h-4 mr-1" />
+                    <span className="hidden sm:inline">Login</span>
+                  </Link>
+                  <Link
+                    to="/admin/register"
+                    className="flex items-center px-3 py-1 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 transition-colors"
+                  >
+                    <FiUserPlus className="w-4 h-4 mr-1" />
+                    <span className="hidden sm:inline">Register</span>
+                  </Link>
+                </>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center px-3 py-1 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 transition-colors"
+                >
+                  <FiLogOut className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Logout</span>
+                </button>
+              )}
 
               {/* Notification and Profile - hidden on small screens */}
               <div className="hidden md:flex items-center space-x-4">
@@ -152,7 +190,9 @@ const AdminLayout = ({ children }) => {
                       alt="Admin"
                       className="w-8 h-8 rounded-full"
                     />
-                    <span className="text-sm font-medium text-gray-700 hidden lg:inline">Admin</span>
+                    <span className="text-sm font-medium text-gray-700 hidden lg:inline">
+                      Admin
+                    </span>
                   </button>
                 </div>
               </div>
@@ -161,10 +201,13 @@ const AdminLayout = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        {/* Page Content */}
+        <main className="p-4 sm:p-6 lg:p-8">
+          {isAuthenticated ? children : <LoginRequired />}
+        </main>
       </div>
     </div>
   );
 };
 
-export default AdminLayout;
+export default AdminPanel;

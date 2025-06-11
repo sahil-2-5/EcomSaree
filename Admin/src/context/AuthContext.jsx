@@ -5,17 +5,17 @@ import axios from "axios";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const register = async (userData) => {
+  const register = async (adminData) => {
     setLoading(true);
     setError(null);
     try {
       const res = await axios.post(
         "http://localhost:2525/admin/signup",
-        userData,
+        adminData,
         {
           withCredentials: true,
         }
@@ -46,7 +46,9 @@ export const AuthProvider = ({ children }) => {
         { email, password },
         { withCredentials: true }
       );
-      setUser(res.data);
+      const { adminToken } = res.data;
+      localStorage.setItem("adminToken", adminToken);
+      setAdmin(res.data);
       return res.data;
     } catch (err) {
       setError(err.response?.data?.msg || "Login failed");
@@ -64,7 +66,8 @@ export const AuthProvider = ({ children }) => {
         {},
         { withCredentials: true }
       );
-      setUser(null);
+      setAdmin(null);
+      localStorage.removeItem("adminToken");
     } catch (err) {
       setError("Logout failed");
     } finally {
@@ -73,9 +76,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const forgotPassword = async (email) => {
-    const res = await axios.post("http://localhost:2525/admin/forgot-password", {
-      email,
-    });
+    const res = await axios.post(
+      "http://localhost:2525/admin/forgot-password",
+      {
+        email,
+      }
+    );
     return res.data;
   };
 
@@ -102,9 +108,9 @@ export const AuthProvider = ({ children }) => {
         const res = await axios.get("http://localhost:2525/admin/session", {
           withCredentials: true,
         });
-        setUser(res.data.user);
+        setAdmin(res.data.admin);
       } catch (err) {
-        setUser(null);
+        setAdmin(null);
       } finally {
         setLoading(false);
       }
@@ -116,10 +122,10 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        user,
+        admin,
         loading,
         error,
-        isAuthenticated: !!user,
+        isAuthenticated: !!admin,
         login,
         logout,
         register,

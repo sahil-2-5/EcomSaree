@@ -47,7 +47,7 @@ const {
 
 // Admin Routes
 router.post("/signup", signup);
-router.post("signup/verify-otp", verifySignupOtp);
+router.post("/signup/verify-otp", verifySignupOtp);
 router.post("/login", login);
 router.post("/forgot-password", validateEmail, forgotPassword);
 router.post("/reset-password/verify-otp", verifyResetOtp);

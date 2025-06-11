@@ -44,12 +44,6 @@ const resetAdminPasswordOTP = async (email, otp) => {
             <p style="margin: 0 0 16px 0; font-size: 14px; color: #555; line-height: 1.5;">
                 If you didn't request this password reset, please secure your account by changing your password immediately.
             </p>
-            
-            <div style="text-align: center; margin-top: 24px;">
-                <a href="${resetLink}" style="display: inline-block; background-color: #d32f2f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: 500; font-size: 15px;">
-                    Reset Password
-                </a>
-            </div>
         </div>
         
         <!-- Footer -->
