@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 
-const resetPasswordOTP = async (email, otp) => {
+const resetClientPasswordOTP = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -46,4 +46,4 @@ const resetPasswordOTP = async (email, otp) => {
   });
 };
 
-module.exports = resetPasswordOTP;
+module.exports = resetClientPasswordOTP;

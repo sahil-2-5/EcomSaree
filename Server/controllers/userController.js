@@ -1,8 +1,8 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-const generateClientToken = require("../utils/generateClientToken");
-const clientSignupOTP = require("../utils/clientSignupOTP");
-const resetPasswordOTP = require("../utils/resetPasswordOTP");
+const generateClientToken = require("../utils/service/client/generateClientToken");
+const clientSignupOTP = require("../utils/service/client/clientSignupOTP");
+const resetClientPasswordOTP = require("../utils/service/client/resetClientPasswordOTP");
 
 // exports.sendOtp = async (req, res) => {
 //   const { email } = req.body;
@@ -55,11 +55,14 @@ const resetPasswordOTP = require("../utils/resetPasswordOTP");
 // };
 
 exports.signup = async (req, res) => {
-  const { firstName, lastName, email, password , agreedToTerms } = req.body;
+  const { firstName, lastName, email, password, agreedToTerms } = req.body;
   try {
-
-    if(!agreedToTerms) {
-      return res.status(400).json({ msg: "You must agree to the Terms and Conditions and Privacy Policy" });
+    if (!agreedToTerms) {
+      return res
+        .status(400)
+        .json({
+          msg: "You must agree to the Terms and Conditions and Privacy Policy",
+        });
     }
 
     const exists = await User.findOne({ email });
@@ -90,7 +93,7 @@ exports.signup = async (req, res) => {
 };
 
 exports.verifySignupOtp = async (req, res) => {
-   const { email, otp } = req.body;
+  const { email, otp } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
@@ -116,11 +119,13 @@ exports.login = async (req, res) => {
     if (!user) return res.status(404).json({ msg: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!isMatch) return res.status(400).json({ msg: "Incorrect Password" });
 
     if (!user.isVerified) {
       return res.status(403).json({ msg: "Email not verified" });
     }
+
+    const clientToken = generateClientToken(user._id);
 
     // ✅ Save user session
     req.session.user = {
@@ -129,17 +134,18 @@ exports.login = async (req, res) => {
       lastName: user.lastName,
       email: user.email,
       isVerified: user.isVerified,
+      clientToken: clientToken,
     };
 
     res.status(200).json({
       ...req.session.user,
-      msg: "Login successful",
+      clientToken: clientToken,
+      msg: "Login successfully",
     });
   } catch (err) {
     res.status(500).json({ msg: "Login error", error: err.message });
   }
 };
-
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -152,16 +158,16 @@ exports.forgotPassword = async (req, res) => {
     user.otpExpires = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    await resetPasswordOTP(email, otp);
+    await resetClientPasswordOTP(email, otp);
 
     res.status(200).json({ msg: "Reset OTP sent to email" });
   } catch (err) {
     res.status(500).json({ msg: "Error sending OTP", error: err.message });
   }
-}
+};
 
 exports.verifyResetOtp = async (req, res) => {
-   const { email, otp } = req.body;
+  const { email, otp } = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -171,14 +177,18 @@ exports.verifyResetOtp = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ msg: "OTP verified. You can now reset your password." });
+    res
+      .status(200)
+      .json({ msg: "OTP verified. You can now reset your password." });
   } catch (err) {
-    res.status(500).json({ msg: "OTP verification failed", error: err.message });
+    res
+      .status(500)
+      .json({ msg: "OTP verification failed", error: err.message });
   }
-}
+};
 
 exports.resetPassword = async (req, res) => {
-   const { email, newPassword } = req.body;
+  const { email, newPassword } = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -190,9 +200,11 @@ exports.resetPassword = async (req, res) => {
 
     res.status(200).json({ msg: "Password reset successful" });
   } catch (err) {
-    res.status(500).json({ msg: "Error resetting password", error: err.message });
+    res
+      .status(500)
+      .json({ msg: "Error resetting password", error: err.message });
   }
-}
+};
 
 exports.logoutUser = async (req, res) => {
   req.session.destroy((err) => {
@@ -204,7 +216,9 @@ exports.logoutUser = async (req, res) => {
 
 exports.getSession = async (req, res) => {
   try {
-    const user = await User.findById(req.session.user._id).select("-password -otp -otpExpires");
+    const user = await User.findById(req.session.user._id).select(
+      "-password -otp -otpExpires"
+    );
 
     if (!user) return res.status(404).json({ msg: "User not found" });
 

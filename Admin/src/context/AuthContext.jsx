@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const res = await axios.post(
-        "http://localhost:2525/user/signup",
+        "http://localhost:2525/admin/signup",
         userData,
         {
           withCredentials: true,
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const verifyOtp = async (formData) => {
     const res = await axios.post(
-      "http://localhost:2525/user/signup/verify-otp",
+      "http://localhost:2525/admin/signup/verify-otp",
       formData
     );
     return res.data;
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const res = await axios.post(
-        "http://localhost:2525/user/login",
+        "http://localhost:2525/admin/login",
         { email, password },
         { withCredentials: true }
       );
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       await axios.post(
-        "http://localhost:2525/user/logout",
+        "http://localhost:2525/admin/logout",
         {},
         { withCredentials: true }
       );
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const forgotPassword = async (email) => {
-    const res = await axios.post("http://localhost:2525/user/forgot-password", {
+    const res = await axios.post("http://localhost:2525/admin/forgot-password", {
       email,
     });
     return res.data;
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
 
   const verifyResetOtp = async (formData) => {
     const res = await axios.post(
-      "http://localhost:2525/user/forgot-password/verify-otp",
+      "http://localhost:2525/admin/forgot-password/verify-otp",
       formData
     );
     return res.data;
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
 
   const resetPassword = async (formData) => {
     const res = await axios.post(
-      "http://localhost:2525/user/reset-password",
+      "http://localhost:2525/admin/reset-password",
       formData
     );
     return res.data;
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const res = await axios.get("http://localhost:2525/user/session", {
+        const res = await axios.get("http://localhost:2525/admin/session", {
           withCredentials: true,
         });
         setUser(res.data.user);

@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { AuthClientId , isAuthenticated } = require("../middlewares/authClientMiddleware");
+const {
+  AuthClientId,
+  isAuthenticated,
+} = require("../middlewares/authClientMiddleware");
 const { validateEmail } = require("../validators/userValidator");
 
 // const {
@@ -17,8 +20,8 @@ const {
   verifyResetOtp,
   resetPassword,
   logoutUser,
-  getSession
-} = require("../controllers/userController"); 
+  getSession,
+} = require("../controllers/userController");
 
 const {
   getAddresses,
@@ -39,14 +42,14 @@ const {
   updateCartItem,
   deleteProductUsingId,
   clearCart,
-  checkout
+  checkout,
 } = require("../controllers/cartController");
 
 const {
   addToWishlist,
   getWishlist,
   removeFromWishlist,
-  clearWishlist
+  clearWishlist,
 } = require("../controllers/wishlistController");
 
 // Routes with `AuthClientId` middleware require a valid token

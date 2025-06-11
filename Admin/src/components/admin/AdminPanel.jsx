@@ -10,7 +10,9 @@ import {
   FiBarChart2,
   FiSettings,
   FiMenu,
-  FiX
+  FiX,
+  FiLogIn,
+  FiUserPlus
 } from 'react-icons/fi';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -96,38 +98,63 @@ const AdminLayout = ({ children }) => {
         {/* Header */}
         <header className="bg-white shadow-sm">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden text-gray-500 hover:text-gray-700"
-            >
-              <FiMenu className="w-6 h-6" />
-            </button>
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-500 hover:text-gray-700">
-                <span className="sr-only">Notifications</span>
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
-                </svg>
+            <div className="flex items-center">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="lg:hidden text-gray-500 hover:text-gray-700 mr-4"
+              >
+                <FiMenu className="w-6 h-6" />
               </button>
-              <div className="relative">
-                <button className="flex items-center space-x-2">
-                  <img
-                    src="/images/admin-avatar.jpg"
-                    alt="Admin"
-                    className="w-8 h-8 rounded-full"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Admin</span>
+              <h1 className="text-lg font-semibold text-gray-800 hidden sm:block">
+                Admin Dashboard
+              </h1>
+            </div>
+            
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Login and Register buttons - visible on all screens */}
+              <Link 
+                to="/admin/login" 
+                className="flex items-center px-3 py-1 text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors"
+              >
+                <FiLogIn className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Login</span>
+              </Link>
+              <Link 
+                to="/admin/register" 
+                className="flex items-center px-3 py-1 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700 transition-colors"
+              >
+                <FiUserPlus className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Register</span>
+              </Link>
+
+              {/* Notification and Profile - hidden on small screens */}
+              <div className="hidden md:flex items-center space-x-4">
+                <button className="text-gray-500 hover:text-gray-700">
+                  <span className="sr-only">Notifications</span>
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                    />
+                  </svg>
                 </button>
+                <div className="relative">
+                  <button className="flex items-center space-x-2">
+                    <img
+                      src="/images/admin-avatar.jpg"
+                      alt="Admin"
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <span className="text-sm font-medium text-gray-700 hidden lg:inline">Admin</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
