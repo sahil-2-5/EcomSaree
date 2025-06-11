@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FiEdit2, FiTrash2, FiPlus } from 'react-icons/fi';
-import AdminLayout from '../../components/admin/AdminLayout';
-import Button from '../../components/common/Button';
+import AdminLayout from '../components/admin/AdminPanel';
+import Button from '../components/common/Button';
 
 const ProductForm = ({ onClose, product = null }) => {
   const [formData, setFormData] = useState(
