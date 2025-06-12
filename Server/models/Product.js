@@ -23,7 +23,6 @@ const filterSchema = new mongoose.Schema(
     color: {
       type: String,
       required: true,
-      enum: ["Red","Blue","Greem","Yellow","Purple"],
     },
   },
   { _id: false }

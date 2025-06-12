@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiEdit2, FiTrash2, FiPlus, FiEye } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
 import Button from "../../components/common/Button";
 import { useProductContext } from "../../context/ProductContext";
@@ -112,7 +112,7 @@ const ProductForm = ({ onClose, product = null }) => {
     data.append("filter", JSON.stringify(formData.filter));
 
     imageFiles.forEach((file) => data.append("images", file));
-    
+
     await addProduct(data); // this should call axios POST
     alert("Product added successfully");
     onClose();
@@ -375,23 +375,21 @@ const ProductForm = ({ onClose, product = null }) => {
 };
 
 const Products = () => {
+  const { products, loading, error } = useProductContext();
   const [showForm, setShowForm] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [previewProduct, setPreviewProduct] = useState(null);
 
   // Sample products data
-  const products = [
-    {
-      id: 1,
-      name: "Banarasi Silk Saree",
-      material: "Pure Silk",
-      price: 15999,
-      originalPrice: 19999,
-      stock: 10,
-      category: "silk",
-      image: "/images/saree1.jpg",
-    },
-    // Add more products...
-  ];
+
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [thumbnailStart, setThumbnailStart] = useState(0);
+
+  useEffect(() => {
+    if (previewProduct) {
+      setSelectedImageIndex(0); // reset on open
+    }
+  }, [previewProduct]);
 
   const handleEdit = (product) => {
     setSelectedProduct(product);
@@ -417,92 +415,100 @@ const Products = () => {
             <p>Add Product</p>
           </Button>
         </div>
-
         {/* Product Table */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="relative">
+          {/* Product Table */}
+          <div className="bg-white rounded-xl shadow overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                    Material
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                    Color
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                    Occasion
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Stock
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {products.map((product) => (
-                  <tr key={product.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {product.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {product.material}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-pink-100 text-pink-800">
-                        {product.category}
+                  <tr key={product._id}>
+                    <td className="px-6 py-4 whitespace-nowrap flex items-center gap-3">
+                      <img
+                        src={product.images[1]?.url}
+                        alt={product.title}
+                        className="h-12 w-12 object-cover rounded border"
+                      />
+                      <span className="text-sm font-medium text-gray-900">
+                        {product.title}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        ₹{product.price.toLocaleString()}
-                      </div>
-                      {product.originalPrice && (
-                        <div className="text-sm text-gray-500 line-through">
-                          ₹{product.originalPrice.toLocaleString()}
-                        </div>
-                      )}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {product.filter?.material || "—"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          product.stock > 10
+                        className="inline-flex items-center text-xs font-medium px-3 py-1 rounded-full border"
+                        style={{
+                          backgroundColor: `${product.filter?.color?.toLowerCase()}20`, // Adds transparency
+                          color: `${product.filter?.color?.toLowerCase()}`,
+                          borderColor: "#e5e7eb", // light gray border
+                        }}
+                      >
+                        {product.filter?.color || "Uncategorized"}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {product.filter?.occasion?.join(", ") || "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      ₹{product.sellingPrice.toLocaleString()}
+                      <span className="line-through ml-2 text-gray-400 text-xs">
+                        ₹{product.price.toLocaleString()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                          product.availableQuantity > 10
                             ? "bg-green-100 text-green-800"
-                            : product.stock > 0
+                            : product.availableQuantity > 0
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
-                        {product.stock} in stock
+                        {product.availableQuantity} in stock
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex space-x-4">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex items-center gap-4">
                         <button
-                          onClick={() => handleEdit(product)}
-                          className="text-gray-600 hover:text-pink-600"
+                          onClick={() => setPreviewProduct(product)}
+                          title="Preview"
+                          className="text-gray-600 hover:text-blue-600"
                         >
+                          <FiEye className="w-5 h-5" />
+                        </button>
+                        <button className="text-gray-600 hover:text-pink-600">
                           <FiEdit2 className="w-5 h-5" />
                         </button>
-                        <button
-                          onClick={() => handleDelete(product.id)}
-                          className="text-gray-600 hover:text-red-600"
-                        >
+                        <button className="text-gray-600 hover:text-red-600">
                           <FiTrash2 className="w-5 h-5" />
                         </button>
                       </div>
@@ -512,6 +518,173 @@ const Products = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Preview Product Modal */}
+          {previewProduct && (
+            <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-2 sm:p-4">
+              <div className="relative bg-white rounded-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl p-4 sm:p-6">
+                {/* Close Button */}
+                <button
+                  onClick={() => setPreviewProduct(null)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl font-bold"
+                >
+                  &times;
+                </button>
+
+                {/* Title */}
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+                  {previewProduct.title}
+                </h2>
+
+                {/* Content Wrapper (Image + Details) */}
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Image Section */}
+                  <div className="flex-1 flex flex-col items-center">
+                    {/* Main Image */}
+                    <div className="w-full aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden border">
+                      <img
+                        src={
+                          previewProduct.images?.[selectedImageIndex || 0]?.url
+                        }
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    {/* Thumbnails */}
+                    <div className="mt-4 flex items-center gap-2 w-full justify-center">
+                      {/* Left Arrow */}
+                      <button
+                        onClick={() =>
+                          setThumbnailStart((prev) => Math.max(prev - 1, 0))
+                        }
+                        className="text-gray-500 hover:text-black disabled:opacity-30"
+                        disabled={thumbnailStart === 0}
+                      >
+                        &#8592;
+                      </button>
+
+                      {/* Thumbnail Images */}
+                      <div className="flex gap-2 overflow-hidden">
+                        {previewProduct.images
+                          .slice(thumbnailStart, thumbnailStart + 3)
+                          .map((img, idx) => {
+                            const actualIdx = thumbnailStart + idx;
+                            return (
+                              <img
+                                key={img.id}
+                                src={img.url}
+                                alt={`Thumb-${actualIdx}`}
+                                onClick={() => setSelectedImageIndex(actualIdx)}
+                                className={`w-20 h-20 object-cover border rounded-md cursor-pointer ${
+                                  selectedImageIndex === actualIdx
+                                    ? "border-2 border-pink-500"
+                                    : "border-gray-300"
+                                }`}
+                              />
+                            );
+                          })}
+                      </div>
+
+                      {/* Right Arrow */}
+                      <button
+                        onClick={() =>
+                          setThumbnailStart((prev) =>
+                            Math.min(prev + 1, previewProduct.images.length - 3)
+                          )
+                        }
+                        className="text-gray-500 hover:text-black disabled:opacity-30"
+                        disabled={
+                          thumbnailStart + 3 >= previewProduct.images.length
+                        }
+                      >
+                        &#8594;
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Details Section */}
+                  <div className="flex-1 flex flex-col justify-start space-y-4 text-sm text-gray-700 break-words">
+                    {/* Material */}
+                    <div className="flex items-start gap-2">
+                      <span className="w-28 font-semibold text-gray-900">
+                        Material:
+                      </span>
+                      <span>{previewProduct.filter?.material || "—"}</span>
+                    </div>
+
+                    {/* Color */}
+                    <div className="flex items-start gap-2">
+                      <span className="w-28 font-semibold text-gray-900">
+                        Color:
+                      </span>
+                      <span
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium"
+                        style={{
+                          backgroundColor: `${previewProduct.filter?.color?.toLowerCase()}20`,
+                          color: `${previewProduct.filter?.color?.toLowerCase()}`,
+                          borderColor: "#e5e7eb",
+                        }}
+                      >
+                        {previewProduct.filter?.color || "—"}
+                      </span>
+                    </div>
+
+                    {/* Occasion */}
+                    <div className="flex items-start gap-2">
+                      <span className="w-28 font-semibold text-gray-900">
+                        Occasion:
+                      </span>
+                      <span>
+                        {previewProduct.filter?.occasion?.join(", ") || "—"}
+                      </span>
+                    </div>
+
+                    {/* Price */}
+                    <div className="flex items-start gap-2">
+                      <span className="w-28 font-semibold text-gray-900">
+                        Price:
+                      </span>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                        <span className="text-green-600 font-bold text-lg">
+                          ₹{previewProduct.sellingPrice.toLocaleString()}
+                        </span>
+                        <span className="line-through text-gray-400 text-sm">
+                          ₹{previewProduct.price.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Stock */}
+                    <div className="flex items-start gap-2">
+                      <span className="w-28 font-semibold text-gray-900">
+                        Stock:
+                      </span>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          previewProduct.availableQuantity > 10
+                            ? "bg-green-100 text-green-800"
+                            : previewProduct.availableQuantity > 0
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {previewProduct.availableQuantity} in stock
+                      </span>
+                    </div>
+
+                    {/* Description */}
+                    <div className="flex items-start gap-2">
+                      <p>
+                        {previewProduct.description ||
+                          "No description available."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
