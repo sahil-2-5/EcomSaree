@@ -46,6 +46,8 @@ export const AuthProvider = ({ children }) => {
         { email, password },
         { withCredentials: true }
       );
+      const { clientToken } = res.data;
+      localStorage.setItem("clientToken",clientToken);
       setUser(res.data);
       return res.data;
     } catch (err) {
@@ -65,6 +67,7 @@ export const AuthProvider = ({ children }) => {
         { withCredentials: true }
       );
       setUser(null);
+      localStorage.removeItem("clientToken")
     } catch (err) {
       setError("Logout failed");
     } finally {

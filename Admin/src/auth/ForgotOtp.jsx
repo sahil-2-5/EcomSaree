@@ -37,7 +37,7 @@ const ForgotOtp = () => {
           Enter the verification code sent to your email
         </p>
       </div>
-
+      
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white/80 backdrop-blur-sm py-8 px-4 shadow-lg ring-1 ring-black/5 sm:rounded-xl sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>

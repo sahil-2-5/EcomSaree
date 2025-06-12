@@ -24,11 +24,18 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-const alloewdOrigins = process.env.FRONTEND_URL ;
+const allowedOrigins = process.env.FRONTEND_URLS.split(",");
 app.use(
   cors({
-    origin: alloewdOrigins,
-    credentials: true, // Allow cookies to be sent
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })

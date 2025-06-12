@@ -201,7 +201,6 @@ const AdminPanel = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        {/* Page Content */}
         <main className="p-4 sm:p-6 lg:p-8">
           {isAuthenticated ? children : <LoginRequired />}
         </main>

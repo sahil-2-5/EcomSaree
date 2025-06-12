@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { v4: uuidv4 } = require("uuid");
 
 const imageSchema = new mongoose.Schema(
   {
@@ -9,63 +8,79 @@ const imageSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const descriptionSchema = new mongoose.Schema(
-  {
-    information: { type: String },
-    fabric: { type: String },
-    style: { type: String },
-    length: { type: String },
-    width: { type: String },
-  },
-  { _id: false }
-);
-
 const filterSchema = new mongoose.Schema(
   {
     material: {
-      type: String, // Silk, Cotton, Georgette, etc.
+      type: String,
       required: true,
+      enum: ["Silk", "Cotton", "Georgette", "Chiffon", "Crepe"], 
     },
     occasion: {
-      type: String, // Wedding, Party, Casual, etc.
+      type: [String],
       required: true,
+      enum: ["Wedding", "Party", "Casual", "Festival", "Office"], 
     },
     color: {
-      type: String, // e.g., Red, Blue, Green, etc.
+      type: String,
       required: true,
+      enum: ["Red","Blue","Greem","Yellow","Purple"],
     },
   },
   { _id: false }
 );
 
-const productSchema = new mongoose.Schema({
-  images: {
-    type: [imageSchema],
-    required: true,
+const productSchema = new mongoose.Schema(
+  {
+    images: {
+      type: [imageSchema],
+      required: true,
+      validate: (v) => Array.isArray(v) && v.length > 0,
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    sellingPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    offerPercentage: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+    },
+    availableQuantity: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    inStock: {
+      type: Boolean,
+      default: true,
+    },
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    filter: {
+      type: filterSchema,
+      required: true,
+    },
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+    },
   },
-  title: { type: String, required: true },
-  type: { type: String, required: true },
-  price: { type: Number, required: true },
-  sellingPrice: { type: Number, required: true },
-  description: {
-    type: descriptionSchema,
-    required: true,
-  },
-  filter: {
-    type: filterSchema,
-    required: true,
-  },
-  offerPercentage: { type: Number, required: true },
-  availableQuantity: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
-  inStock: {
-    type: Boolean,
-    default: true,
-  },
-  admin: { type: mongoose.Schema.Types.ObjectId, ref: "Admin" },
-});
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Product", productSchema);
