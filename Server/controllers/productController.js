@@ -4,47 +4,59 @@ const uploadToCloudinary = require("../uploads/cloudinaryStorage");
 
 exports.addProduct = async (req, res) => {
   try {
+    // Check images
     if (!req.files || req.files.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No images uploaded" });
-    }
-
-    const imageUrls = [];
-    for (const file of req.files) {
-      const imageData = await uploadToCloudinary(file.buffer, "products");
-
-      imageUrls.push({
-        id: imageData.public_id || imageData.id || uuidv4(),
-        url: imageData.secure_url || imageData.url,
+      return res.status(400).json({
+        success: false,
+        message: "No images uploaded",
       });
     }
 
-    const description = req.body.description
-      ? JSON.parse(req.body.description)
-      : {};
+    // Upload to Cloudinary and get filename + URL
+    const imageUrls = await Promise.all(
+      req.files.map(async (file) => {
+        const uploaded = await uploadToCloudinary(file.buffer, "products");
+        return {
+          id: uploaded.public_id || uuidv4(),
+          url: uploaded.secure_url || uploaded.url,
+          filename: file.originalname, // ⬅️ filename from frontend
+        };
+      })
+    );
 
+    // Parse filter JSON
     const filter = req.body.filter ? JSON.parse(req.body.filter) : null;
     if (!filter) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Filter data is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Filter data is required",
+      });
     }
 
+    // Build product object
     const productData = {
-      ...req.body,
+      title: req.body.title,
+      price: parseFloat(req.body.price),
+      sellingPrice: parseFloat(req.body.sellingPrice),
+      offerPercentage: parseFloat(req.body.offerPercentage),
+      availableQuantity: parseInt(req.body.availableQuantity),
+      inStock: req.body.inStock === "false" ? false : true,
+      description: req.body.description,
       images: imageUrls,
-      description,
-      filter,
-      user: req.admin._id,
-      inStock: req.body.inStock !== undefined ? req.body.inStock : true,
+      filter: filter,
+      admin: req.admin._id, // authenticated admin
     };
 
+    // Save to DB
     const product = await Product.create(productData);
-    res
-      .status(201)
-      .json({ success: true, message: "Product added successfully", product });
+
+    return res.status(201).json({
+      success: true,
+      message: "Product added successfully",
+      product,
+    });
   } catch (error) {
+    console.error("Add Product Error:", error);
     res.status(500).json({
       success: false,
       message: "Error adding product",

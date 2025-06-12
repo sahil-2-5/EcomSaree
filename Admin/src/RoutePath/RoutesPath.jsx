@@ -1,9 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 
 // Admin Pages
-import Dashboard from "../pages/Dashboard";
-import Products from "../pages/Products";
-import Orders from "../pages/Orders";
+import Dashboard from "../pages/dashboard/Dashboard";
+import Products from "../pages/products/Products";
+import Orders from "../pages/orders/Orders";
 
 import Login from "../auth/Login";
 import Register from "../auth/Register";

@@ -7,7 +7,7 @@ import {
   FiPackage,
   FiAlertCircle
 } from 'react-icons/fi';
-import AdminLayout from '../components/admin/AdminPanel';
+import AdminLayout from '../../components/admin/AdminPanel';
 
 const StatCard = ({ title, value, icon: Icon, trend, color }) => (
   <div className="bg-white rounded-lg shadow-sm p-6">

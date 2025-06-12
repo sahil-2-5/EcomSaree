@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FiEye, FiDownload } from 'react-icons/fi';
-import AdminLayout from '../components/admin/AdminPanel';
+import AdminLayout from '../../components/admin/AdminPanel';
 
 const OrderDetails = ({ order, onClose }) => {
   return (

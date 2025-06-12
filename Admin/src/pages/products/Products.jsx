@@ -1,82 +1,126 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
-import AdminLayout from "../components/admin/AdminPanel";
-import Button from "../components/common/Button";
+import AdminLayout from "../../components/admin/AdminPanel";
+import Button from "../../components/common/Button";
+import { useProductContext } from "../../context/ProductContext";
 
 const ProductForm = ({ onClose, product = null }) => {
-  const [formData, setFormData] = useState(
-    product || {
-      name: "",
+  const { addProduct } = useProductContext();
+
+  const [formData, setFormData] = useState({
+    title: "",
+    price: "",
+    sellingPrice: "",
+    offerPercentage: "",
+    availableQuantity: "",
+    description: "",
+    images: [],
+    filter: {
       material: "",
-      price: "",
-      originalPrice: "",
-      description: "",
-      stock: "",
-      category: "",
-      images: [],
-    }
-  );
+      occasion: [],
+      color: "",
+    },
+    inStock: true,
+  });
+
+  const [imageFiles, setImageFiles] = useState([]);
 
   const materialOptions = ["Silk", "Cotton", "Georgette", "Chiffon", "Crepe"];
   const occasionOptions = ["Wedding", "Party", "Casual", "Festival", "Office"];
   const colorOptions = ["Red", "Blue", "Green", "Yellow", "Purple"];
 
-  const [originalPrice, setOriginalPrice] = useState("");
-  const [sellingPrice, setSellingPrice] = useState("");
-  const [offerPercentage, setOfferPercentage] = useState("");
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setImageFiles(files);
 
-  const [selectedOccasions, setSelectedOccasions] = useState([]);
+    const readers = files.map((file) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(readers).then((previews) => {
+      setPreviewImages(previews);
+    });
+
+    setFormData((prev) => ({ ...prev, images: files }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (name === "price" || name === "sellingPrice") {
+      const price = name === "price" ? +value : +formData.price;
+      const sellingPrice =
+        name === "sellingPrice" ? +value : +formData.sellingPrice;
+      if (price && sellingPrice) {
+        const offer = (((price - sellingPrice) / price) * 100).toFixed(2);
+        setFormData((prev) => ({
+          ...prev,
+          offerPercentage: offer,
+        }));
+      }
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      filter: {
+        ...prev.filter,
+        [name]: value,
+      },
+    }));
+  };
 
   const handleOccasionChange = (e) => {
     const value = e.target.value;
-    setSelectedOccasions((prev) =>
-      prev.includes(value)
-        ? prev.filter((item) => item !== value)
-        : [...prev, value]
-    );
+    setFormData((prev) => {
+      const isSelected = prev.filter.occasion.includes(value);
+      const newOccasions = isSelected
+        ? prev.filter.occasion.filter((o) => o !== value)
+        : [...prev.filter.occasion, value];
+      return {
+        ...prev,
+        filter: {
+          ...prev.filter,
+          occasion: newOccasions,
+        },
+      };
+    });
   };
 
-  const handleOriginalPriceChange = (value) => {
-    setOriginalPrice(value);
-    if (value && sellingPrice) {
-      const offer = (((value - sellingPrice) / value) * 100).toFixed(2);
-      setOfferPercentage(offer);
-    }
-  };
-
-  const handleSellingPriceChange = (value) => {
-    setSellingPrice(value);
-    if (originalPrice && value) {
-      const offer = (((originalPrice - value) / originalPrice) * 100).toFixed(
-        2
-      );
-      setOfferPercentage(offer);
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const data = new FormData();
+
+    data.append("title", formData.title);
+    data.append("price", formData.price);
+    data.append("sellingPrice", formData.sellingPrice);
+    data.append("offerPercentage", formData.offerPercentage);
+    data.append("availableQuantity", formData.availableQuantity);
+    data.append("inStock", formData.inStock);
+    data.append("description", JSON.stringify(formData.description));
+    data.append("filter", JSON.stringify(formData.filter));
+
+    imageFiles.forEach((file) => data.append("images", file));
+    
+    await addProduct(data); // this should call axios POST
+    alert("Product added successfully");
     onClose();
   };
 
   // Inside ProductForm component
   const [previewImages, setPreviewImages] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  const handleMultipleImages = (e) => {
-    const files = Array.from(e.target.files);
-    const previews = [];
-
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewImages((prev) => [...prev, reader.result]);
-      };
-      reader.readAsDataURL(file);
-    });
-
-    setFormData((prev) => ({ ...prev, images: files }));
-  };
 
   const handleDotClick = (index) => {
     setCurrentSlide(index);
@@ -124,10 +168,10 @@ const ProductForm = ({ onClose, product = null }) => {
               )}
 
               <input
-                onChange={handleMultipleImages}
                 type="file"
                 accept="image/*"
                 multiple
+                onChange={handleImageUpload}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
             </div>
@@ -177,35 +221,37 @@ const ProductForm = ({ onClose, product = null }) => {
               <div className="flex flex-wrap gap-4">
                 <input
                   type="text"
+                  name="title"
                   placeholder="Product Title"
+                  value={formData.title}
+                  onChange={handleChange}
                   className="flex-1 min-w-[100%] p-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
                 />
 
                 <input
                   type="number"
+                  name="price"
                   placeholder="Original Price"
-                  value={originalPrice}
-                  onChange={(e) =>
-                    handleOriginalPriceChange(parseFloat(e.target.value))
-                  }
+                  value={formData.price}
+                  onChange={handleChange}
                   className="flex-1 min-w-[45%] p-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
                 />
 
                 <input
                   type="number"
+                  name="sellingPrice"
                   placeholder="Selling Price"
-                  value={sellingPrice}
-                  onChange={(e) =>
-                    handleSellingPriceChange(parseFloat(e.target.value))
-                  }
+                  value={formData.sellingPrice}
+                  onChange={handleChange}
                   className="flex-1 min-w-[45%] p-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
                 />
 
                 <div className="relative flex-1 min-w-[49%]">
                   <input
                     type="number"
+                    name="offerPercentage"
                     placeholder="Offer Percentage"
-                    value={offerPercentage}
+                    value={formData.offerPercentage}
                     readOnly
                     className="w-full p-2 border rounded bg-gray-100 text-gray-700 focus:outline-none"
                   />
@@ -216,7 +262,10 @@ const ProductForm = ({ onClose, product = null }) => {
 
                 <input
                   type="number"
+                  name="availableQuantity"
                   placeholder="Available Quantity"
+                  value={formData.availableQuantity}
+                  onChange={handleChange}
                   className="flex-1 min-w-[45%] p-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
                 />
               </div>
@@ -229,7 +278,10 @@ const ProductForm = ({ onClose, product = null }) => {
               </h3>
               <textarea
                 placeholder="Product Information"
+                name="description"
                 rows={3}
+                value={formData.description}
+                onChange={handleChange}
                 className="w-full p-2 border rounded mb-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
               ></textarea>
             </div>
@@ -247,7 +299,12 @@ const ProductForm = ({ onClose, product = null }) => {
                   <label className="block text-sm font-medium text-pink-600 mb-4">
                     Select Material
                   </label>
-                  <select className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500">
+                  <select
+                    name="material"
+                    value={formData.filter.material}
+                    onChange={handleFilterChange}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  >
                     <option value="">Select material</option>
                     {materialOptions.map((material) => (
                       <option key={material} value={material}>
@@ -262,7 +319,12 @@ const ProductForm = ({ onClose, product = null }) => {
                   <label className="block text-sm font-medium text-pink-600 mb-4">
                     Select Color
                   </label>
-                  <select className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500">
+                  <select
+                    name="color"
+                    value={formData.filter.color}
+                    onChange={handleFilterChange}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  >
                     <option value="">Select color</option>
                     {colorOptions.map((color) => (
                       <option key={color} value={color}>
@@ -287,7 +349,7 @@ const ProductForm = ({ onClose, product = null }) => {
                       <input
                         type="checkbox"
                         value={occasion}
-                        checked={selectedOccasions.includes(occasion)}
+                        checked={formData.filter.occasion.includes(occasion)}
                         onChange={handleOccasionChange}
                         className="accent-pink-500"
                       />

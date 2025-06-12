@@ -58,11 +58,9 @@ exports.signup = async (req, res) => {
   const { firstName, lastName, email, password, agreedToTerms } = req.body;
   try {
     if (!agreedToTerms) {
-      return res
-        .status(400)
-        .json({
-          msg: "You must agree to the Terms and Conditions and Privacy Policy",
-        });
+      return res.status(400).json({
+        msg: "You must agree to the Terms and Conditions and Privacy Policy",
+      });
     }
 
     const exists = await User.findOne({ email });
@@ -136,6 +134,13 @@ exports.login = async (req, res) => {
       isVerified: user.isVerified,
       clientToken: clientToken,
     };
+
+    res.cookie("token", clientToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.status(200).json({
       ...req.session.user,
