@@ -41,9 +41,12 @@ exports.addProduct = async (req, res) => {
       offerPercentage: parseFloat(req.body.offerPercentage),
       availableQuantity: parseInt(req.body.availableQuantity),
       inStock: req.body.inStock === "false" ? false : true,
-      description: req.body.description,
+      description: JSON.parse(req.body.description),
       images: imageUrls,
-      filter: filter,
+      filter:
+        typeof req.body.filter === "string"
+          ? JSON.parse(req.body.filter)
+          : req.body.filter,
       admin: req.admin._id, // authenticated admin
     };
 
@@ -105,38 +108,45 @@ exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Parse description and filter if sent as JSON strings
-    if (req.body.description && typeof req.body.description === "string") {
-      try {
-        req.body.description = JSON.parse(req.body.description);
-      } catch (err) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid JSON in description",
-        });
-      }
-    }
+    // 🛡️ Parse and sanitize form fields
+    const {
+      title,
+      price,
+      sellingPrice,
+      offerPercentage,
+      availableQuantity,
+      inStock,
+      description,
+      filter,
+    } = req.body;
 
-    // Parse filter if it's a string
-    if (req.body.filter && typeof req.body.filter === "string") {
-      try {
-        req.body.filter = JSON.parse(req.body.filter);
-      } catch (err) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid JSON in filter",
-        });
-      }
-    }
+    const parsedDescription =
+      typeof description === "string" ? JSON.parse(description) : description;
+    const parsedFilter =
+      typeof filter === "string" ? JSON.parse(filter) : filter;
 
-    const updatedProduct = await Product.findByIdAndUpdate(id, req.body, {
+    const updatedData = {
+      title,
+      price: parseFloat(price),
+      sellingPrice: parseFloat(sellingPrice),
+      offerPercentage: parseFloat(offerPercentage),
+      availableQuantity: parseInt(availableQuantity),
+      inStock: inStock === "false" ? false : true,
+      description: parsedDescription,
+      filter: parsedFilter,
+    };
+
+    // 🛠️ Update in DB
+    const updatedProduct = await Product.findByIdAndUpdate(id, updatedData, {
       new: true,
+      runValidators: true,
     });
 
     if (!updatedProduct) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
     }
 
     res.status(200).json({
@@ -145,7 +155,11 @@ exports.updateProduct = async (req, res) => {
       product: updatedProduct,
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error("Update error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
