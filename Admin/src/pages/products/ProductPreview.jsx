@@ -132,10 +132,10 @@ const ProductPreview = ({ product, onClose }) => {
               <span className="w-28 font-semibold text-gray-900">Price:</span>
               <div className="flex flex-col sm:flex-row sm:items-center gap-1">
                 <span className="text-green-600 font-bold text-lg">
-                  ₹{product.sellingPrice.toLocaleString()}
+                  {product.sellingPrice.toLocaleString()}/-
                 </span>
                 <span className="line-through text-gray-400 text-sm">
-                  ₹{product.price.toLocaleString()}
+                  {product.price.toLocaleString()}/-
                 </span>
               </div>
             </div>

@@ -63,7 +63,7 @@ router.put("/update-product/:id", AuthAdminId, upload.none(), updateProduct);
 router.put(
   "/update-image/:productId/:imageId",
   AuthAdminId,
-  upload.single("image"),
+  upload.single("file"),
   updateSingleImage
 );
 router.delete("/delete-product/:id", AuthAdminId, deleteProduct);

@@ -95,12 +95,22 @@ export const ProductProvider = ({ children }) => {
     const formData = new FormData();
     formData.append("file", file);
 
+    const token = localStorage.getItem("adminToken");
+
+    if (!token) {
+      throw new Error("No authentication token found in cookies");
+    }
+
     try {
       const res = await axios.put(
-        `${BASE_URL}/image/${productId}/${imageId}`,
+        `http://localhost:2525/admin/update-image/${productId}/${imageId}`,
         formData,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
         }
       );
       setProducts((prev) =>
