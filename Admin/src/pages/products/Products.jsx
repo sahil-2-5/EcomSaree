@@ -134,19 +134,15 @@ const Products = () => {
                     </div>
                   </div>
 
-                  {/* Product Info */}
                   <div className="p-4 flex-grow flex flex-col">
-                    {/* Product type */}
                     <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
                       {product.category}
                     </div>
                     
-                    {/* Product title */}
                     <h3 className="text-md font-medium text-gray-900 mb-2 line-clamp-2 flex-grow">
                       {product.title}
                     </h3>
                     
-                    {/* Price and stock in same row */}
                     <div className="flex justify-between items-center mt-auto">
                       <div>
                         {product.offerPercentage > 0 ? (
@@ -185,7 +181,6 @@ const Products = () => {
           )}
         </div>
 
-        {/* Preview Product Modal */}
         {previewProduct && (
           <ProductPreview
             product={previewProduct}
@@ -193,10 +188,8 @@ const Products = () => {
           />
         )}
 
-        {/* Add Product Form Modal */}
         {showAddForm && <AddProductForm onClose={() => setShowAddForm(false)} />}
 
-        {/* Update Product Form Modal */}
         {selectedProduct && (
           <UpdateProductForm
             product={selectedProduct}
@@ -204,7 +197,6 @@ const Products = () => {
           />
         )}
 
-        {/* Update Image Form Modal */}
         {imageToUpdate && (
           <UpdateImageForm
             product={imageToUpdate.product}

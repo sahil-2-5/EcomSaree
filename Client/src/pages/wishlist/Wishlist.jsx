@@ -1,53 +1,79 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiTrash2 } from 'react-icons/fi';
-import saree1 from "../../assets/saree1.jpg"
-import saree2 from "../../assets/saree2.jpg"
-import saree3 from "../../assets/saree3.jpg"
+import { FiShoppingCart, FiTrash2, FiHeart } from 'react-icons/fi';
+import { useWishlistContext } from '../../context/WishlistContext';
 
 const Wishlist = () => {
-  // TODO: Get from WishlistContext
-  const wishlistItems = [
-    {
-      id: 1,
-      name: 'Banarasi Silk Saree',
-      price: '₹15,999',
-      originalPrice: '₹18,999',
-      image: saree1,
-      color: 'Pink',
-      inStock: true,
-    },
-    {
-      id: 2,
-      name: 'Kanjivaram Silk Saree',
-      price: '₹18,999',
-      originalPrice: '₹21,999',
-      image: saree2,
-      color: 'Blue',
-      inStock: true,
-    },
-    {
-      id: 3,
-      name: 'Designer Party Wear Saree',
-      price: '₹12,999',
-      originalPrice: '₹14,999',
-      image: saree3,
-      color: 'Red',
-      inStock: false,
-    },
-  ];
+  const { 
+    wishlist, 
+    loading, 
+    error, 
+    fetchWishlist, 
+    removeFromWishlist 
+  } = useWishlistContext();
+  
+  const [removingId, setRemovingId] = useState(null); // Track which item is being removed
 
-  const handleRemoveFromWishlist = (id) => {
-    // TODO: Implement remove from wishlist
-    console.log('Remove from wishlist:', id);
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  const handleRemoveFromWishlist = async (productId) => {
+    setRemovingId(productId);
+    try {
+      const result = await removeFromWishlist(productId);
+      if (result.success) {
+        // Optional: Show success toast
+        console.log('Removed from wishlist');
+      }
+    } finally {
+      setRemovingId(null);
+    }
   };
 
-  const handleAddToCart = (id) => {
-    // TODO: Implement add to cart
-    console.log('Add to cart:', id);
+  const handleAddToCart = async (product) => {
+    // try {
+    //   await addToCart({
+    //     productId: product.product._id,
+    //     quantity: 1,
+    //     color: product.color
+    //   });
+    //   // Optional: Show success toast
+    //   console.log('Added to cart');
+    // } catch (err) {
+    //   console.error('Error adding to cart:', err);
+    //   // Optional: Show error toast
+    // }
   };
 
-  if (wishlistItems.length === 0) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Loading your wishlist...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white flex items-center justify-center">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error loading wishlist</h2>
+          <p className="text-gray-600 mb-8">{error}</p>
+          <button
+            onClick={fetchWishlist}
+            className="inline-flex items-center px-6 py-2 border border-gray-200 bg-white hover:border-pink-200 text-pink-600 text-sm font-medium transition-all duration-300"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (wishlist.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -76,67 +102,84 @@ const Wishlist = () => {
         <div className="flex flex-col mb-12">
           <span className="inline-block px-4 py-1.5 text-xs font-medium tracking-wide text-pink-700 uppercase bg-pink-50 border border-pink-100 mb-4 w-fit">My Items</span>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">My Wishlist</h1>
-          <p className="text-gray-600">{wishlistItems.length} items saved to your wishlist</p>
+          <p className="text-gray-600">{wishlist.length} {wishlist.length === 1 ? 'item' : 'items'} saved to your wishlist</p>
         </div>
 
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {wishlistItems.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white border border-gray-200 hover:border-pink-200 transition-all duration-300"
-          >
-            <div className="relative aspect-w-2 aspect-[3/4] ">
-              <img
-                src={item.image}
-                alt={item.name}
-                className="object-cover w-full h-full"
-              />
-              <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300" />
-              <button
-                onClick={() => handleRemoveFromWishlist(item.id)}
-                className="absolute top-4 right-4 p-3 bg-white/90 border border-gray-200 hover:border-pink-200 transition-colors duration-300"
-              >
-                <FiTrash2 className="w-4 h-4 text-gray-600" />
-              </button>
-            </div>
-
-            <div className="p-6">
-              <div className="mb-1">
-                <span className="text-xs text-gray-500 uppercase">{item.color}</span>
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {wishlist.map((item) => (
+            <div
+              key={item.product._id}
+              className="bg-white border border-gray-200 hover:border-pink-200 transition-all duration-300 group relative"
+            >
+              <div className="relative aspect-[3/4]">
+                <img
+                  src={item.image || '/default-product.jpg'}
+                  alt={item.title}
+                  className="object-cover w-full h-full"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                <button
+                  onClick={() => handleRemoveFromWishlist(item.product._id)}
+                  disabled={removingId === item.product._id}
+                  className={`absolute top-4 right-4 p-3 bg-white/90 border transition-colors duration-300 ${
+                    removingId === item.product._id 
+                      ? 'border-gray-300 cursor-wait' 
+                      : 'border-gray-200 hover:border-pink-200'
+                  }`}
+                  aria-label="Remove from wishlist"
+                >
+                  {removingId === item.product._id ? (
+                    <div className="animate-spin w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full"></div>
+                  ) : (
+                    <FiTrash2 className="w-4 h-4 text-gray-600" />
+                  )}
+                </button>
               </div>
-              
-              <h3 className="text-base font-medium text-gray-900 mb-2 line-clamp-2">{item.name}</h3>
-              
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-lg font-semibold text-gray-900">{item.price}</span>
-                {item.originalPrice && (
-                  <span className="text-sm text-gray-400 line-through">
-                    {item.originalPrice}
+
+              <div className="p-6">
+                <div className="mb-1">
+                  <span className="text-xs text-gray-500 uppercase">{item.color}</span>
+                </div>
+                
+                <Link to={`/product/${item.product._id}`}>
+                  <h3 className="text-base font-medium text-gray-900 mb-2 line-clamp-2 hover:text-pink-600 transition-colors">
+                    {item.title}
+                  </h3>
+                </Link>
+                
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-lg font-semibold text-gray-900">
+                    ₹{item.sellingPrice.toLocaleString()}
                   </span>
-                )}
-              </div>
+                  {item.price > item.sellingPrice && (
+                    <span className="text-sm text-gray-400 line-through">
+                      ₹{item.price.toLocaleString()}
+                    </span>
+                  )}
+                </div>
 
-              <div className="space-y-3">
-                {item.inStock ? (
+                <div className="space-y-3">
                   <button
-                    onClick={() => handleAddToCart(item.id)}
+                    onClick={() => handleAddToCart(item)}
                     className="w-full flex items-center justify-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium transition-colors duration-300"
                   >
                     <FiShoppingCart className="w-4 h-4 mr-2" />
                     Add to Cart
                   </button>
-                ) : (
-                  <div className="w-full px-4 py-2 bg-gray-100 text-gray-400 text-sm font-medium text-center">
-                    Out of Stock
-                  </div>
-                )}
+                  <Link 
+                    to={`/product/${item.product._id}`} 
+                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-200 hover:border-pink-200 text-gray-700 text-sm font-medium transition-colors duration-300"
+                  >
+                    View Details
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 

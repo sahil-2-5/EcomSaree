@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { useCart } from "../../context/CartContext";
+import { useWishlistContext } from "../../context/WishlistContext"; // Import the wishlist context
 
 const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlistContext(); // Get wishlist methods
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -14,10 +16,28 @@ const ProductCard = ({ product }) => {
     addToCart(product);
   };
 
-  const handleWishlist = (e) => {
+  const handleWishlist = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    // Handle wishlist
+
+    try {
+      const result = await addToWishlist({
+        _id: product._id,
+        title: product.title,
+        price: product.price,
+        sellingPrice: product.sellingPrice,
+        color: product.filter.color,
+        images: product.images[0].url,
+      });
+
+      if (result.success) {
+        alert("Product added to wishlist successfully!");
+      } else {
+        alert(result.message || "Failed to add to wishlist");
+      }
+    } catch (error) {
+      alert(error.message || "An error occurred while adding to wishlist");
+    }
   };
 
   return (
@@ -65,11 +85,23 @@ const ProductCard = ({ product }) => {
             </button>
             <button
               onClick={handleWishlist}
-              className="flex items-center px-4 py-2 border border-gray-200 hover:border-pink-200 bg-white text-sm font-medium transition-colors duration-300"
-              aria-label="Add to wishlist"
+              className={`flex items-center px-4 py-2 border text-sm font-medium transition-colors duration-300 ${
+                isInWishlist(product._id)
+                  ? "border-pink-200 bg-pink-50 text-pink-600"
+                  : "border-gray-200 hover:border-pink-200 bg-white"
+              }`}
+              aria-label={
+                isInWishlist(product._id)
+                  ? "Remove from wishlist"
+                  : "Add to wishlist"
+              }
             >
-              <FiHeart className="w-4 h-4 mr-2 text-pink-600" />
-              Wishlist
+              <FiHeart
+                className={`w-4 h-4 mr-2 ${
+                  isInWishlist(product._id) ? "fill-current" : ""
+                }`}
+              />
+              {isInWishlist(product._id) ? "Wishlisted" : "Wishlist"}
             </button>
           </div>
 
@@ -102,8 +134,6 @@ const ProductCard = ({ product }) => {
           </div>
 
           <div className="w-[200px]">
-            {" "}
-            {/* or whatever width you need */}
             <h3 className="text-base font-medium text-gray-900 mb-2 group-hover:text-pink-600 transition-colors duration-300 truncate">
               {product.title}
             </h3>
