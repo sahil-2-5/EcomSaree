@@ -22,7 +22,7 @@ const ProductCard = ({ product }) => {
 
     try {
       const result = await addToWishlist({
-        _id: product._id,
+        id: product._id,
         title: product.title,
         price: product.price,
         sellingPrice: product.sellingPrice,
@@ -71,7 +71,7 @@ const ProductCard = ({ product }) => {
 
           {/* Action buttons */}
           <div
-            className={`absolute inset-x-0 bottom-0 flex justify-between items-center p-4 bg-white/90 transition-all duration-300 ${
+            className={`absolute inset-x-0 bottom-0 flex justify-between items-center p-2 bg-white/90 transition-all duration-300 ${
               isHovered ? "translate-y-0" : "translate-y-full"
             }`}
           >

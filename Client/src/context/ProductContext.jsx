@@ -26,6 +26,23 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  const fetchProductById = async (productId) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `http://localhost:2525/user/products/${productId}`
+      );
+      setCurrentProduct(res.data.product);
+      setError(null);
+      return res.data.product; // Return the product for immediate use
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch product");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAllProducts();
   }, []);
@@ -37,6 +54,7 @@ export const ProductProvider = ({ children }) => {
         loading,
         error,
         fetchAllProducts,
+        fetchProductById,
       }}
     >
       {children}

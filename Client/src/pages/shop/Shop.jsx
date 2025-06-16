@@ -5,7 +5,7 @@ import ProductCard from "../../components/shop/ProductCard";
 import { useProductContext } from "../../context/ProductContext";
 
 const Shop = () => {
-  const { products, loading, error } = useProductContext();
+  const { products } = useProductContext();
 
   const [filters, setFilters] = useState({
     price: "",

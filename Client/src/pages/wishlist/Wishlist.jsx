@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiTrash2, FiHeart } from 'react-icons/fi';
+import { FiShoppingCart, FiTrash2 } from 'react-icons/fi';
 import { useWishlistContext } from '../../context/WishlistContext';
 
 const Wishlist = () => {
@@ -9,10 +9,12 @@ const Wishlist = () => {
     loading, 
     error, 
     fetchWishlist, 
-    removeFromWishlist 
+    removeFromWishlist,
+    clearWishlist 
   } = useWishlistContext();
   
-  const [removingId, setRemovingId] = useState(null); // Track which item is being removed
+  const [removingId, setRemovingId] = useState(null);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     fetchWishlist();
@@ -21,29 +23,28 @@ const Wishlist = () => {
   const handleRemoveFromWishlist = async (productId) => {
     setRemovingId(productId);
     try {
-      const result = await removeFromWishlist(productId);
-      if (result.success) {
-        // Optional: Show success toast
-        console.log('Removed from wishlist');
-      }
+      await removeFromWishlist(productId);
     } finally {
       setRemovingId(null);
     }
   };
 
+  const handleClearWishlist = async () => {
+    const confirmClear = window.confirm(
+      "Are you sure you want to clear your entire wishlist?"
+    );
+    if (!confirmClear) return;
+
+    setIsClearing(true);
+    try {
+      await clearWishlist();
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   const handleAddToCart = async (product) => {
-    // try {
-    //   await addToCart({
-    //     productId: product.product._id,
-    //     quantity: 1,
-    //     color: product.color
-    //   });
-    //   // Optional: Show success toast
-    //   console.log('Added to cart');
-    // } catch (err) {
-    //   console.error('Error adding to cart:', err);
-    //   // Optional: Show error toast
-    // }
+    // Your add to cart implementation
   };
 
   if (loading) {
@@ -101,8 +102,29 @@ const Wishlist = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col mb-12">
           <span className="inline-block px-4 py-1.5 text-xs font-medium tracking-wide text-pink-700 uppercase bg-pink-50 border border-pink-100 mb-4 w-fit">My Items</span>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">My Wishlist</h1>
-          <p className="text-gray-600">{wishlist.length} {wishlist.length === 1 ? 'item' : 'items'} saved to your wishlist</p>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">My Wishlist</h1>
+              <p className="text-gray-600">{wishlist.length} {wishlist.length === 1 ? 'item' : 'items'} saved</p>
+            </div>
+            <button
+              onClick={handleClearWishlist}
+              disabled={isClearing}
+              className="flex items-center justify-center sm:justify-start px-4 py-2 border border-gray-200 hover:border-red-200 hover:bg-red-50 text-red-600 text-sm font-medium transition-colors duration-300 w-full sm:w-auto"
+            >
+              {isClearing ? (
+                <>
+                  <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full mr-2"></div>
+                  Clearing...
+                </>
+              ) : (
+                <>
+                  <FiTrash2 className="w-4 h-4 mr-2" />
+                  Clear All Items
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">

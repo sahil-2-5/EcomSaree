@@ -58,12 +58,12 @@ export const WishlistProvider = ({ children }) => {
     setError(null);
 
     try {
-      if (!productData?._id || !productData?.title || !productData?.images) {
+      if (!productData?.id || !productData?.title || !productData?.images) {
         throw new Error("Missing required product data");
       }
 
       const wishlistItem = {
-        product: productData._id,
+        product: productData.id,
         title: productData.title,
         price: productData.price,
         sellingPrice: productData.sellingPrice,
@@ -142,7 +142,13 @@ export const WishlistProvider = ({ children }) => {
   const clearWishlist = async () => {
     try {
       const response = await axios.delete(
-        "http://localhost:2525/user/wishlist/clear"
+        "http://localhost:2525/user/wishlist/clear",
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
       );
       setWishlist(response.data.wishlist.items);
       return { success: true };
@@ -157,10 +163,6 @@ export const WishlistProvider = ({ children }) => {
     return wishlist.some((item) => item.product._id === productId);
   };
 
-  const getWishlistCount = () => {
-    return wishlist.length;
-  };
-
   return (
     <WishlistContext.Provider
       value={{
@@ -171,7 +173,6 @@ export const WishlistProvider = ({ children }) => {
         removeFromWishlist,
         clearWishlist,
         isInWishlist,
-        getWishlistCount,
         fetchWishlist, // Expose fetch in case manual refresh is needed
       }}
     >
