@@ -1,47 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FiMinus, FiPlus, FiHeart, FiShare2 } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";
 import Button from "../../components/common/Button";
 import ProductCard from "../../components/shop/ProductCard";
-
-import saree1 from "../../assets/saree1.jpg";
-import saree2 from "../../assets/saree2.jpg";
-import saree3 from "../../assets/saree3.jpg";
-import saree4 from "../../assets/saree4.jpg";
+import { useProductContext } from "../../context/ProductContext";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart } = useCart();
+  const { fetchProductById, loading, error } = useProductContext();
+
+  const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  // Sample product data (replace with actual data from your backend)
-  const product = {
-    id,
-    name: "Banarasi Silk Saree",
-    material: "Pure Silk",
-    price: 15999,
-    originalPrice: 19999,
-    discount: 20,
-    description:
-      "Beautiful handcrafted Banarasi silk saree with intricate zari work. Perfect for wedding and festive occasions.",
-    details: [
-      "Material: Pure Silk",
-      "Length: 6.3 meters",
-      "Width: 1.1 meters",
-      "Blouse Piece: Included (0.8 meters)",
-      "Wash Care: Dry Clean Only",
-    ],
-    images: [saree1, saree2, saree3, saree4],
-    stock: 10,
-    reviews: {
-      average: 4.5,
-      count: 127,
-    },
-  };
+  useEffect(() => {
+    const getProduct = async () => {
+      try {
+        const fetched = await fetchProductById(id);
+        if (fetched) {
+          setProduct(fetched);
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      }
+    };
 
-  // Sample related products
+    getProduct();
+  }, []);
+
+  if (loading || !product)
+    return (
+      <div className="p-10 text-center text-lg font-semibold">Loading...</div>
+    );
+  if (error)
+    return (
+      <div className="p-10 text-center text-red-600 font-semibold">
+        Error: {error}
+      </div>
+    );
+
   const relatedProducts = [
     // Add related products data here
   ];
@@ -79,7 +78,7 @@ const ProductDetail = () => {
             <li>
               <span className="text-gray-400 px-2">/</span>
             </li>
-            <li className="text-gray-900 font-medium">{product.name}</li>
+            <li className="text-gray-900 font-medium">{product.title}</li>
           </ol>
         </nav>
         <div className="lg:grid lg:grid-cols-2 lg:gap-x-8">
@@ -87,8 +86,8 @@ const ProductDetail = () => {
           <div className="mb-8 lg:mb-0 sticky top-24">
             <div className="aspect-h-4 aspect-w-3 overflow-hidden rounded-2xl mb-6 bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
               <img
-                src={product.images[selectedImage]}
-                alt={product.name}
+                src={product.images[selectedImage].url}
+                alt={product.title}
                 className="h-full w-full object-cover object-center transform transition-transform duration-700 hover:scale-105"
               />
             </div>
@@ -104,8 +103,8 @@ const ProductDetail = () => {
                   } transition-all duration-300`}
                 >
                   <img
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
+                    src={image.url}
+                    alt={`${product.title} ${index + 1}`}
                     className={`h-full w-full object-cover object-center transition-opacity duration-300 ${
                       selectedImage === index
                         ? "opacity-100"
@@ -120,63 +119,38 @@ const ProductDetail = () => {
           {/* Product Info */}
           <div>
             <span className="inline-block px-3 py-1 text-xs font-medium tracking-wide text-pink-700 uppercase bg-pink-50 rounded-full mb-4 border border-pink-100">
-              {product.material}
+              {product.filter.material}
             </span>
             <h1 className="text-4xl font-bold text-gray-900 mb-4 leading-tight">
-              {product.name}
+              {product.title}
             </h1>
-            <div className="flex items-center mb-6">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, index) => (
-                  <svg
-                    key={index}
-                    className={`w-5 h-5 ${
-                      index < Math.floor(product.reviews.average)
-                        ? "text-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-                <span className="ml-2 text-gray-600">
-                  ({product.reviews.count} reviews)
-                </span>
-              </div>
-            </div>
+            <div className="flex items-center mb-6"></div>
 
             <div className="mb-6">
               <div className="flex items-center">
                 <span className="text-3xl font-bold text-pink-600">
                   ₹{product.price.toLocaleString()}
                 </span>
-                {product.originalPrice && (
+                {product.sellingPrice && (
                   <span className="ml-3 text-lg text-gray-500 line-through">
-                    ₹{product.originalPrice.toLocaleString()}
+                    ₹{product.sellingPrice.toLocaleString()}
                   </span>
                 )}
-                {product.discount && (
+                {product.offerPercentage && (
                   <span className="ml-3 text-sm font-medium text-green-600">
-                    {product.discount}% off
+                    {product.offerPercentage}% off
                   </span>
                 )}
               </div>
               {product.stock <= 5 && (
                 <p className="mt-2 text-sm text-orange-600">
-                  Only {product.stock} left in stock!
+                  Only {product.availableQuantity} left in stock!
                 </p>
               )}
             </div>
 
             <div className="prose prose-sm text-gray-600 mb-6">
               <p>{product.description}</p>
-              <ul className="mt-4">
-                {product.details.map((detail, index) => (
-                  <li key={index}>{detail}</li>
-                ))}
-              </ul>
             </div>
 
             <div className="mb-6">
@@ -198,7 +172,7 @@ const ProductDetail = () => {
                   </span>
                   <button
                     onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= product.stock}
+                    disabled={quantity >= product.availableQuantity}
                     className={`p-3 rounded-full transition-all duration-300 ${
                       quantity >= product.stock
                         ? "text-gray-400"
@@ -212,7 +186,7 @@ const ProductDetail = () => {
                   <Button
                     onClick={handleAddToCart}
                     className="col-span-6 h-12 bg-pink-600 hover:bg-pink-700 text-white rounded-full shadow-lg hover:shadow-pink-200 transition-all duration-300"
-                    disabled={product.stock === 0}
+                    disabled={product.availableQuantity === 0}
                   >
                     Add to Cart
                   </Button>

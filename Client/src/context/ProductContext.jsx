@@ -30,11 +30,16 @@ export const ProductProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `http://localhost:2525/user/products/${productId}`
+        `http://localhost:2525/user/product/${productId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
       );
-      setCurrentProduct(res.data.product);
       setError(null);
-      return res.data.product; // Return the product for immediate use
+      return res.data.product;
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch product");
       return null;

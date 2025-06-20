@@ -114,7 +114,7 @@ const ProductCard = ({ product }) => {
             )}
             {product.availableQuantity <= 5 &&
               product.availableQuantity > 0 && (
-                <span className="inline-block px-3 py-1 text-xs font-medium bg-orange-600 text-white mt-1">
+                <span className="inline-block px-3 py-1 text-xs font-medium bg-red-500 text-white mt-1">
                   Only {product.availableQuantity} left
                 </span>
               )}
