@@ -3,17 +3,24 @@ import { Link } from "react-router-dom";
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import { motion } from "framer-motion";
 import { useCart } from "../../context/CartContext";
-import { useWishlistContext } from "../../context/WishlistContext"; // Import the wishlist context
+import { useWishlistContext } from "../../context/WishlistContext";
 
 const ProductCard = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlistContext(); // Get wishlist methods
+  const { addToCart , fetchCart  } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlistContext();
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
+    const result = await addToCart(product._id, 1);
+
+    if (result.success) {
+      await fetchCart();
+      alert("Product added to cart successfully!");
+    } else {
+      alert(result.message || "Failed to add to cart");
+    }
   };
 
   const handleWishlist = async (e) => {
