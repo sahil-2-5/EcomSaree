@@ -34,6 +34,15 @@ const {
 } = require("../controllers/productController");
 
 const {
+  createBanner,
+  getAllBanners,
+  getBannerById,
+  updateBanner,
+  updateSingleBannerImage,
+  deleteBanner,
+} = require("../controllers/bannerController");
+
+const {
   createOrder,
   verifyPayment,
 } = require("../controllers/orderController");
@@ -71,5 +80,23 @@ router.delete("/delete-product/:id", AuthAdminId, deleteProduct);
 // Order Routes
 router.post("/create-order", AuthAdminId, createOrder);
 router.post("/verify-payment", AuthAdminId, verifyPayment);
+
+// Banner Routes
+router.post(
+  "/create-banner",
+  AuthAdminId,
+  upload.array("images"),
+  createBanner
+);
+router.get("/banners", AuthAdminId, getAllBanners);
+router.get("/banner/:id", AuthAdminId, getBannerById);
+router.put("/update-banner/:id", AuthAdminId, upload.none(), updateBanner);
+router.put(
+  "/update-banner-image/:bannerId/:imageId",
+  AuthAdminId,
+  upload.single("image"),
+  updateSingleBannerImage
+);
+router.delete("/delete-banner/:id", AuthAdminId, deleteBanner);
 
 module.exports = router;

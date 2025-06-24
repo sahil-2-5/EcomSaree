@@ -4,7 +4,7 @@ const uploadToCloudinary = require("../uploads/cloudinaryStorage");
 
 exports.addProduct = async (req, res) => {
   try {
-    // Check images
+
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
@@ -12,19 +12,17 @@ exports.addProduct = async (req, res) => {
       });
     }
 
-    // Upload to Cloudinary and get filename + URL
     const imageUrls = await Promise.all(
       req.files.map(async (file) => {
         const uploaded = await uploadToCloudinary(file.buffer, "products");
         return {
           id: uploaded.public_id || uuidv4(),
           url: uploaded.secure_url || uploaded.url,
-          filename: file.originalname, // ⬅️ filename from frontend
+          filename: file.originalname, 
         };
       })
     );
 
-    // Parse filter JSON
     const filter = req.body.filter ? JSON.parse(req.body.filter) : null;
     if (!filter) {
       return res.status(400).json({
