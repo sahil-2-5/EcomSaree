@@ -34,9 +34,6 @@ const Navbar = () => {
 
   const accountLinks = [
     { name: "My Profile", href: "/account" },
-    { name: "My Orders", href: "/account?tab=orders" },
-    { name: "My Wishlist", href: "/account?tab=wishlist" },
-    { name: "My Addresses", href: "/account?tab=addresses" },
     { name: "Logout", onClick: handleLogout },
   ];
 

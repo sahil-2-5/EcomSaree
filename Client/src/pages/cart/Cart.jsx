@@ -205,20 +205,6 @@ const Cart = () => {
                 <span className="text-xs font-medium tracking-wide text-pink-700 uppercase mb-2">Summary</span>
                 <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
               </div>
-
-              <div className="flex space-x-4">
-                <input
-                  type="text"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="Enter coupon code"
-                  className="flex-grow border border-gray-200 px-4 py-2 text-sm focus:border-pink-200 focus:outline-none transition"
-                />
-                <button className="px-6 py-2 border border-gray-200 hover:border-pink-200 text-sm font-medium transition">
-                  Apply
-                </button>
-              </div>
-
               <div className="space-y-4">
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal</span>
@@ -250,10 +236,6 @@ const Cart = () => {
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <span className="text-green-500">✔</span>
                   <span>Secure checkout powered by Razorpay</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-green-500">✔</span>
-                  <span>EMI options available</span>
                 </div>
               </div>
             </div>

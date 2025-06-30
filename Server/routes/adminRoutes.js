@@ -88,7 +88,7 @@ router.post(
   upload.array("images"),
   createBanner
 );
-router.get("/banners", AuthAdminId, getAllBanners);
+router.get("/banners", getAllBanners);
 router.get("/banner/:id", AuthAdminId, getBannerById);
 router.put("/update-banner/:id", AuthAdminId, upload.none(), updateBanner);
 router.put(

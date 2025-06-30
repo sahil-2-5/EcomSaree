@@ -33,10 +33,6 @@ const bannerSchema = new mongoose.Schema(
     ctaText: {
       type: String,
     },
-    ctaLink: {
-      type: String,
-      required: true,
-    },
     status: {
       type: String,
       enum: ["active", "draft"],

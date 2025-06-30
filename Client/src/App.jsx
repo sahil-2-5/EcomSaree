@@ -3,6 +3,7 @@ import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { ToastProvider } from "./context/ToastContext";
+import { AddressProvider } from "./context/AddressContext";
 import { ProductProvider } from "./context/ProductContext";
 import AppRoutes from "./RoutePath/RoutesPath";
 
@@ -13,7 +14,9 @@ const App = () => {
         <CartProvider>
           <WishlistProvider>
             <ToastProvider>
-              <AppRoutes />
+              <AddressProvider>
+                <AppRoutes />
+              </AddressProvider>
             </ToastProvider>
           </WishlistProvider>
         </CartProvider>

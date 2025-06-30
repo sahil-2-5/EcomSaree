@@ -39,7 +39,6 @@ exports.createBanner = async (req, res) => {
       description: req.body.description,
       type: req.body.type,
       ctaText: req.body.ctaText,
-      ctaLink: req.body.ctaLink,
       status: req.body.status || "draft",
       position: req.body.position ? parseInt(req.body.position) : 1,
       startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { FiEdit2, FiTrash2, FiEye, FiPlus } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiEye, FiPlus, FiX, FiImage } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
 import CreateBanner from "../../pages/banners/CreateBanner";
 import EditBanner from "../../pages/banners/EditBanner";
 import PreviewBanner from "../../pages/banners/PreviewBanner";
+import EditBannerImage from "../../pages/banners/EditBannerImage";
 
 const banners = [
   {
@@ -58,40 +59,130 @@ const Banners = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [showEditImage, setShowEditImage] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState(null);
 
   const handleAddBanner = () => {
     setShowCreate(true);
-    setShowEdit(false);
-    setShowPreview(false);
     setSelectedBanner(null);
   };
 
   const handleEdit = (banner) => {
     setSelectedBanner(banner);
     setShowEdit(true);
-    setShowCreate(false);
-    setShowPreview(false);
   };
 
   const handlePreview = (banner) => {
     setSelectedBanner(banner);
     setShowPreview(true);
-    setShowEdit(false);
-    setShowCreate(false);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this banner?")) {
-      console.log("Deleting", id);
-    }
+  const handleDeleteClick = (banner) => {
+    setSelectedBanner(banner);
+    setShowDelete(true);
+  };
+
+  const handleEditImageClick = (banner) => {
+    setSelectedBanner(banner);
+    setShowEditImage(true);
+  };
+
+  const handleDeleteConfirm = (id) => {
+    console.log("Deleting banner with id:", id);
+    setShowDelete(false);
+    // Here you would typically call an API to delete the banner
+  };
+
+  const closeAllModals = () => {
+    setShowCreate(false);
+    setShowEdit(false);
+    setShowPreview(false);
+    setShowDelete(false);
+    setShowEditImage(false);
+    setSelectedBanner(null);
   };
 
   const [featuredBanner, ...otherBanners] = banners;
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="relative space-y-6">
+        {/* Overlay for modals */}
+        {(showCreate || showEdit || showPreview || showDelete || showEditImage) && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+        )}
+
+        {/* Create Banner Modal */}
+        {showCreate && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+              <button
+                onClick={closeAllModals}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <FiX className="w-6 h-6" />
+              </button>
+              <CreateBanner onClose={closeAllModals} />
+            </div>
+          </div>
+        )}
+
+        {/* Edit Banner Modal */}
+        {showEdit && selectedBanner && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+              <button
+                onClick={closeAllModals}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <FiX className="w-6 h-6" />
+              </button>
+              <EditBanner banner={selectedBanner} onClose={closeAllModals} />
+            </div>
+          </div>
+        )}
+
+        {/* Edit Banner Image Modal */}
+        {showEditImage && selectedBanner && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+              <button
+                onClick={closeAllModals}
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              >
+                <FiX className="w-6 h-6" />
+              </button>
+              <EditBannerImage banner={selectedBanner} onClose={closeAllModals} />
+            </div>
+          </div>
+        )}
+
+        {/* Preview Banner Modal */}
+        {showPreview && selectedBanner && (
+          <PreviewBanner
+            bannerImages={[selectedBanner.image]}
+            formData={{
+              title: selectedBanner.title,
+              subtitle: selectedBanner.subtitle,
+              description: selectedBanner.description || "",
+              ctaText: "Shop Now",
+            }}
+            onClose={closeAllModals}
+          />
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDelete && selectedBanner && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <DeleteBanner 
+              banner={selectedBanner}
+              onClose={closeAllModals}
+              onConfirm={handleDeleteConfirm}
+            />
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex justify-between items-center flex-wrap gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Banners</h1>
@@ -104,85 +195,44 @@ const Banners = () => {
           </button>
         </div>
 
-        {/* Conditional Components */}
-        {showCreate && <CreateBanner onClose={() => setShowCreate(false)} />}
-        {showEdit && selectedBanner && (
-          <EditBanner banner={selectedBanner} onClose={() => setShowEdit(false)} />
-        )}
-        {showPreview && selectedBanner && (
-          <PreviewBanner banner={selectedBanner} onClose={() => setShowPreview(false)} />
-        )}
-
-        {/* Featured Banner */}
-        <div className="bg-gradient-to-r from-pink-100 to-white p-6 rounded-lg shadow-md flex flex-col md:flex-row items-center gap-6">
-          <img
-            src={featuredBanner.image}
-            alt={featuredBanner.title}
-            className="w-full md:w-1/2 h-64 object-cover rounded-md"
-          />
-          <div className="w-full md:w-1/2 space-y-2">
-            <h2 className="text-2xl font-bold text-pink-800">{featuredBanner.title}</h2>
-            <p className="text-gray-700">{featuredBanner.subtitle}</p>
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600 mt-2">
-              <div>
-                <strong>Start:</strong> {featuredBanner.startDate}
-              </div>
-              <div>
-                <strong>End:</strong> {featuredBanner.endDate}
-              </div>
-              <div>
-                <strong>Clicks:</strong> {featuredBanner.clicks}
-              </div>
-            </div>
-            <div className="mt-3 flex gap-3">
-              <button
-                onClick={() => handlePreview(featuredBanner)}
-                className="border px-3 py-1 rounded hover:bg-gray-100"
-              >
-                <FiEye />
-              </button>
-              <button
-                onClick={() => handleEdit(featuredBanner)}
-                className="border px-3 py-1 rounded hover:bg-gray-100"
-              >
-                <FiEdit2 />
-              </button>
-              <button
-                onClick={() => handleDelete(featuredBanner.id)}
-                className="border px-3 py-1 rounded hover:bg-gray-100"
-              >
-                <FiTrash2 />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Other Banners */}
+        {/* Banners List */}
         <div className="space-y-4">
           {otherBanners.map((banner) => (
             <div
               key={banner.id}
               className="bg-white p-5 rounded-lg shadow flex flex-col md:flex-row md:items-center justify-between gap-4"
             >
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold text-gray-800">{banner.title}</h2>
-                <p className="text-sm text-gray-500">{banner.subtitle}</p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Position:</span> {banner.position}
-                </p>
+              <div className="flex items-center gap-4">
+               
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    {banner.title}
+                  </h2>
+                  <p className="text-sm text-gray-500">{banner.subtitle}</p>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Position:</span>{" "}
+                    {banner.position}
+                  </p>
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-6 md:gap-12 text-sm text-gray-600">
                 <div>
-                  <span className="block font-medium text-gray-700">Start Date</span>
+                  <span className="block font-medium text-gray-700">
+                    Start Date
+                  </span>
                   {banner.startDate}
                 </div>
                 <div>
-                  <span className="block font-medium text-gray-700">End Date</span>
+                  <span className="block font-medium text-gray-700">
+                    End Date
+                  </span>
                   {banner.endDate}
                 </div>
                 <div>
-                  <span className="block font-medium text-gray-700">Clicks</span>
+                  <span className="block font-medium text-gray-700">
+                    Clicks
+                  </span>
                   {banner.clicks.toLocaleString()}
                 </div>
               </div>
@@ -204,6 +254,13 @@ const Banners = () => {
                     <FiEye />
                   </button>
                   <button
+                    title="Edit Image"
+                    onClick={() => handleEditImageClick(banner)}
+                    className="border px-3 py-1 text-sm rounded hover:bg-gray-50"
+                  >
+                    <FiImage />
+                  </button>
+                  <button
                     title="Edit"
                     onClick={() => handleEdit(banner)}
                     className="border px-3 py-1 text-sm rounded hover:bg-gray-50"
@@ -212,7 +269,7 @@ const Banners = () => {
                   </button>
                   <button
                     title="Delete"
-                    onClick={() => handleDelete(banner.id)}
+                    onClick={() => handleDeleteClick(banner)}
                     className="border px-3 py-1 text-sm rounded hover:bg-gray-50"
                   >
                     <FiTrash2 />
