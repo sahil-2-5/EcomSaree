@@ -15,7 +15,6 @@ const Cart = () => {
     clearCart
   } = useCart();
 
-  const [couponCode, setCouponCode] = useState('');
   const [isClearing, setIsClearing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false); // NEW: Local update state
 

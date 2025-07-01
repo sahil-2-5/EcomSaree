@@ -134,7 +134,7 @@ export const CartProvider = ({ children }) => {
         throw new Error(response.data?.message || "Failed to remove item");
       }
 
-      setCart(response.data.cart.items);
+      setCart(response.data.cart?.items);
       return { success: true, message: "Item removed" };
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
