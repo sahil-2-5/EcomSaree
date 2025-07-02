@@ -51,7 +51,7 @@ export const AddressProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.put(
-        "http://localhost:2525/user/addresses/set-default-address",
+        "http://localhost:2525/user/set-default-address",
         { addressId },
         {
           headers: {

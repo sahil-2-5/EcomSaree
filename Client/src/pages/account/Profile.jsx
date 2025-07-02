@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import { FaCheckCircle, FaRegEdit } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
 
 const Profile = () => {
-  const { user, loading, setUser } = useAuth(); // ✅ fetch user & updater
+  const { user, loading, updateProfile } = useAuth(); // ✅ using updateProfile from context
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
   });
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !isEditing) {
       setFormData({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
@@ -31,37 +32,40 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
+    setSaving(true);
+    setError(null);
     try {
-      const res = await axios.put(
-        "http://localhost:2525/user/update-profile",
-        {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("clientToken")}`,
-          },
-          withCredentials: true,
-        }
-      );
+      const updatedUser = await updateProfile({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      });
 
-      setUser(res.data.updatedUser); // ✅ update global user in context
+      setFormData({
+        ...formData,
+        firstName: updatedUser.firstName || "",
+        lastName: updatedUser.lastName || "",
+      });
+
       setIsEditing(false);
       alert("Profile updated successfully");
     } catch (err) {
       console.error("Update failed", err);
       alert("Failed to update profile");
+    } finally {
+      setSaving(false);
     }
   };
 
   if (loading) return <p className="text-center py-10">Loading...</p>;
-  if (!user) return <p className="text-center py-10 text-red-500">No user found.</p>;
+  if (!user)
+    return <p className="text-center py-10 text-red-500">No user found.</p>;
 
   return (
     <div className="bg-white border rounded-lg p-6 shadow-sm">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Personal Information</h2>
+        <h2 className="text-xl font-semibold text-gray-800">
+          Personal Information
+        </h2>
         <button
           onClick={() => setIsEditing(!isEditing)}
           className="flex items-center gap-2 text-sm text-pink-600 hover:underline"
@@ -124,9 +128,10 @@ const Profile = () => {
       {isEditing && (
         <button
           onClick={handleSave}
+          disabled={saving}
           className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-md text-sm"
         >
-          Save Changes
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       )}
     </div>

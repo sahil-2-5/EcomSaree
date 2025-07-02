@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
 
   const verifyResetOtp = async (formData) => {
     const res = await axios.post(
-      "http://localhost:2525/user/forgot-password/verify-otp",
+      "http://localhost:2525/user/reset-password/verify-otp",
       formData
     );
     return res.data;
@@ -97,6 +97,27 @@ export const AuthProvider = ({ children }) => {
     );
     return res.data;
   };
+  
+const updateProfile = async (formData) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await axios.put(
+      "http://localhost:2525/user/update-profile",
+      formData,
+      { withCredentials: true }
+    );
+
+    const updatedUser = res.data.updatedUser; // ✅ coming from your controller
+    setUser(updatedUser); // ✅ update context state
+    return updatedUser;
+  } catch (err) {
+    setError(err.response?.data?.msg || "Profile update failed");
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Load user session on page load
   useEffect(() => {
@@ -130,6 +151,7 @@ export const AuthProvider = ({ children }) => {
         forgotPassword,
         verifyResetOtp,
         resetPassword,
+        updateProfile,
       }}
     >
       {children}

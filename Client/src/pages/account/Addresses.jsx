@@ -198,7 +198,6 @@ const Addresses = () => {
                       {address.city}, {address.state} - {address.pincode}
                     </p>
                     <p><span className="font-semibold">Country:</span> {address.country}</p>
-
                     {!address.isDefault && (
                       <button
                         onClick={() => handleSetDefault(address._id)}

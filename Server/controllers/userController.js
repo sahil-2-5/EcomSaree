@@ -165,7 +165,7 @@ exports.forgotPassword = async (req, res) => {
 
     await resetClientPasswordOTP(email, otp);
 
-    res.status(200).json({ msg: "Reset OTP sent to email" });
+    res.status(200).json({ msg: "Reset OTP sent to email", success: true });
   } catch (err) {
     res.status(500).json({ msg: "Error sending OTP", error: err.message });
   }
@@ -184,7 +184,7 @@ exports.verifyResetOtp = async (req, res) => {
 
     res
       .status(200)
-      .json({ msg: "OTP verified. You can now reset your password." });
+      .json({ msg: "OTP verified. You can now reset your password.", success: true });
   } catch (err) {
     res
       .status(500)
@@ -203,11 +203,37 @@ exports.resetPassword = async (req, res) => {
     user.otpExpires = null;
     await user.save();
 
-    res.status(200).json({ msg: "Password reset successful" });
+    res.status(200).json({ msg: "Password reset successful" , success: true });
   } catch (err) {
     res
       .status(500)
       .json({ msg: "Error resetting password", error: err.message });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  const { firstName, lastName, email } = req.body;
+  try {
+    const user = await User.findById(req.session.user._id);
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    await user.save();
+
+    res.status(200).json({ 
+      msg: "Profile updated successfully", 
+      success: true, 
+      updatedUser: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ msg: "Error updating profile", error: err.message });
   }
 };
 

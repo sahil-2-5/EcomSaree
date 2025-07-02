@@ -19,6 +19,7 @@ const {
   forgotPassword,
   verifyResetOtp,
   resetPassword,
+  updateProfile,
   logoutUser,
   getSession,
 } = require("../controllers/userController");
@@ -66,13 +67,14 @@ router.post("/login", login);
 router.post("/forgot-password", validateEmail, forgotPassword);
 router.post("/reset-password/verify-otp", verifyResetOtp);
 router.post("/reset-password", resetPassword);
+router.put("/update-profile", AuthClientId, updateProfile);
 router.post("/logout", AuthClientId, logoutUser);
 router.get("/session", isAuthenticated, getSession);
 
 // Address Routes
 router.get("/addresses", AuthClientId, getAddresses);
 router.post("/add-address", AuthClientId, addAddresses);
-router.post("/set-default-address", AuthClientId, setDefaultAddress);
+router.put("/set-default-address", AuthClientId, setDefaultAddress);
 router.put("/update-address/:addressId", AuthClientId, updateAddress);
 router.delete("/delete-address/:addressId", AuthClientId, deleteAddress);
 
