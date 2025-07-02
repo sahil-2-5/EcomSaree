@@ -53,6 +53,10 @@ const {
   clearWishlist,
 } = require("../controllers/wishlistController");
 
+const {
+  getAllBanners
+} = require("../controllers/bannerController");
+
 // Routes with `AuthClientId` middleware require a valid token
 
 // User Routes
@@ -95,5 +99,8 @@ router.post("/wishlist/add", AuthClientId, addToWishlist);
 router.get("/wishlist", AuthClientId, getWishlist);
 router.delete("/wishlist/remove/:productId", AuthClientId, removeFromWishlist);
 router.delete("/wishlist/clear", AuthClientId, clearWishlist);
+
+// Banner Routes
+router.get("/banners", getAllBanners);
 
 module.exports = router;

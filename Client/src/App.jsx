@@ -6,6 +6,7 @@ import { ToastProvider } from "./context/ToastContext";
 import { AddressProvider } from "./context/AddressContext";
 import { ProductProvider } from "./context/ProductContext";
 import AppRoutes from "./RoutePath/RoutesPath";
+import { BannerProvider } from "./context/BannerContext";
 
 const App = () => {
   return (
@@ -15,7 +16,9 @@ const App = () => {
           <WishlistProvider>
             <ToastProvider>
               <AddressProvider>
-                <AppRoutes />
+                <BannerProvider>
+                   <AppRoutes />
+                </BannerProvider>
               </AddressProvider>
             </ToastProvider>
           </WishlistProvider>

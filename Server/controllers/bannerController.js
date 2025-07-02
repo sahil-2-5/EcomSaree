@@ -17,8 +17,9 @@ exports.createBanner = async (req, res) => {
     const uploadedImages = await Promise.all(
       req.files.map(async (file) => {
         const uploaded = await uploadToCloudinary(file.buffer, "banners");
+        console.log("Uploaded Image:", uploaded);
         return {
-          id: uploaded.public_id || uuidv4(),
+          id: uploaded.id,
           url: uploaded.secure_url || uploaded.url,
           filename: file.originalname,
         };
