@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiShoppingCart, FiTrash2 } from 'react-icons/fi';
 import { useWishlistContext } from '../../context/WishlistContext';
+import { useCart } from "../../context/CartContext";
 
 const Wishlist = () => {
   const { 
@@ -15,6 +16,7 @@ const Wishlist = () => {
   
   const [removingId, setRemovingId] = useState(null);
   const [isClearing, setIsClearing] = useState(false);
+  const { addToCart , fetchCart  } = useCart();
 
   useEffect(() => {
     fetchWishlist();
@@ -43,8 +45,17 @@ const Wishlist = () => {
     }
   };
 
-  const handleAddToCart = async (product) => {
-    // Your add to cart implementation
+  const handleAddToCart = async (productId) => {
+
+    const result = await addToCart(productId, 1);
+
+    if (result.success) {
+      await fetchCart();
+      alert("Product added to cart successfully!");
+    } else {
+      alert(result.message || "Failed to add to cart");
+    }
+
   };
 
   if (loading) {
@@ -183,7 +194,7 @@ const Wishlist = () => {
 
                 <div className="space-y-3">
                   <button
-                    onClick={() => handleAddToCart(item)}
+                    onClick={() => handleAddToCart(item.product._id)}
                     className="w-full flex items-center justify-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium transition-colors duration-300"
                   >
                     <FiShoppingCart className="w-4 h-4 mr-2" />
