@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { FiX } from "react-icons/fi";
 import Button from "../../components/common/Button";
+import { useBanner } from "../../context/BannerContext"; // Adjust the import path as needed
 
 const EditBannerImage = ({ banner, onClose }) => {
+  const { updateSingleBannerImage } = useBanner();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
@@ -18,20 +20,24 @@ const EditBannerImage = ({ banner, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file || !banner.images?.[selectedImageIndex]?.id) return;
 
     setLoading(true);
     try {
-      // TODO: Replace with actual API call to update banner image
-      console.log("Updating banner image with file:", file);
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
+      // Call the updateSingleBannerImage function from context
+      await updateSingleBannerImage(
+        banner._id,
+        banner.images[selectedImageIndex].id,
+        file
+      );
+      
       alert("Banner image updated successfully!");
       onClose(); // Close the modal after successful update
     } catch (err) {
       console.error("Banner image update failed:", err);
-      alert(`Banner image update failed: ${err.message}`);
+      alert(
+        `Banner image update failed: ${err.response?.data?.message || err.message}`
+      );
     } finally {
       setLoading(false);
     }
@@ -39,54 +45,71 @@ const EditBannerImage = ({ banner, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="relative bg-white rounded-xl w-full max-w-4xl max-h-[95vh] overflow-y-auto shadow-2xl p-4 sm:p-6">
+      <div className="relative bg-white rounded-xl w-full max-w-5xl max-h-[95vh] overflow-y-auto shadow-2xl p-4 sm:p-6">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-red-600"
+          className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl font-bold"
         >
-          <FiX className="w-6 h-6" />
+          &times;
         </button>
 
         {/* Title */}
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-          Update Banner Image
+        <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+          Update Banner Images
         </h2>
 
         {/* Content Wrapper */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left Column - Current Banner Image */}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left Column - Current Images Preview */}
           <div className="w-full lg:w-1/2 flex flex-col items-center">
-            <h3 className="text-lg font-semibold text-gray-700 mb-4">
-              Current Banner
+            <h3 className="text-lg font-semibold text-pink-500 mb-6">
+              Current Banner Images
             </h3>
 
-            <div className="w-full aspect-[3/1] bg-gray-100 border border-gray-300 rounded-xl overflow-hidden">
-              <img
-                src={banner.image}
-                alt={banner.title}
-                className="w-full h-full object-cover"
-              />
+            {/* Main Selected Image */}
+            <div className="w-full aspect-[3/1] bg-gray-100 border border-pink-400 rounded-xl overflow-hidden">
+              {banner.images?.[selectedImageIndex]?.url ? (
+                <img
+                  src={banner.images[selectedImageIndex].url}
+                  alt="Selected Banner"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-pink-500 text-sm px-4 text-center">
+                  Select an image to replace
+                </div>
+              )}
             </div>
 
-            <div className="mt-4 text-sm text-gray-600">
-              <p>
-                <span className="font-medium">Title:</span> {banner.title}
-              </p>
-              <p>
-                <span className="font-medium">Position:</span> {banner.position}
-              </p>
-            </div>
+            {/* Thumbnails */}
+            {banner.images?.length > 0 && (
+              <div className="mt-4 w-full flex flex-wrap gap-2 justify-center">
+                {banner.images.map((img, idx) => (
+                  <img
+                    key={img._id || img.id}
+                    src={img.url}
+                    alt={`Banner-thumb-${idx}`}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`w-20 h-20 object-cover border rounded-md cursor-pointer ${
+                      selectedImageIndex === idx
+                        ? "border-2 border-pink-500"
+                        : "border-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Right Column - New Banner Upload */}
+          {/* Right Column - New Image Upload */}
           <div className="w-full lg:w-1/2 flex flex-col">
             <div className="bg-white rounded-lg p-4 flex flex-col items-center">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                Upload New Banner
+              <h3 className="text-lg font-semibold text-pink-500 mb-6 -mt-4">
+                Upload New Image
               </h3>
 
-              <div className="w-full aspect-[3/1] relative bg-gray-100 border-dashed border-2 border-blue-400 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className="w-full aspect-[3/1] relative bg-gray-100 border-dashed border-2 border-pink-400 rounded-lg flex items-center justify-center overflow-hidden">
                 {preview ? (
                   <img
                     src={preview}
@@ -94,12 +117,12 @@ const EditBannerImage = ({ banner, onClose }) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-gray-500 text-center text-sm px-4">
+                  <span className="text-pink-500 text-center text-sm px-4">
                     Drag and drop or{" "}
-                    <span className="text-blue-600 font-medium underline">
+                    <span className="text-pink-600 font-medium underline">
                       click to upload
                     </span>
-                    <p className="mt-2 text-xs text-gray-400">
+                    <p className="mt-2 text-xs text-pink-400">
                       Recommended size: 1200×400px (3:1 aspect ratio)
                     </p>
                   </span>
@@ -115,7 +138,7 @@ const EditBannerImage = ({ banner, onClose }) => {
               {preview && (
                 <div className="w-full mt-4 flex flex-col items-center">
                   <div className="flex justify-center">
-                    <span className="w-2 h-2 mx-1 rounded-full bg-blue-500 scale-110"></span>
+                    <span className="w-2 h-2 mx-1 rounded-full bg-pink-500 scale-110"></span>
                   </div>
                   <button
                     type="button"
@@ -123,7 +146,7 @@ const EditBannerImage = ({ banner, onClose }) => {
                       setFile(null);
                       setPreview(null);
                     }}
-                    className="mt-2 text-blue-500 text-sm font-medium hover:underline"
+                    className="mt-2 text-pink-500 text-sm font-medium hover:underline"
                   >
                     Clear Image
                   </button>
@@ -138,7 +161,7 @@ const EditBannerImage = ({ banner, onClose }) => {
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={!file || loading}
+                disabled={!file || !banner.images?.[selectedImageIndex]?.id || loading}
                 className="px-6 py-2"
               >
                 {loading ? (

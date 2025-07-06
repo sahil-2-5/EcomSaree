@@ -1,58 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiEdit2, FiTrash2, FiEye, FiPlus, FiX, FiImage } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
 import CreateBanner from "../../pages/banners/CreateBanner";
 import EditBanner from "../../pages/banners/EditBanner";
 import PreviewBanner from "../../pages/banners/PreviewBanner";
 import EditBannerImage from "../../pages/banners/EditBannerImage";
-
-const banners = [
-  {
-    id: 1,
-    title: "Summer Sale 2024",
-    subtitle: "Up to 50% off on all summer collection",
-    position: "Homepage Hero",
-    startDate: "2024-06-01",
-    endDate: "2024-08-31",
-    clicks: 1250,
-    status: "Active",
-    image: "https://via.placeholder.com/800x300?text=Summer+Sale+2024",
-  },
-  {
-    id: 2,
-    title: "New Arrivals",
-    subtitle: "Check out our latest saree collection",
-    position: "Category Page",
-    startDate: "2024-07-15",
-    endDate: "2024-09-15",
-    clicks: 890,
-    status: "Active",
-    image: "https://via.placeholder.com/800x300?text=New+Arrivals",
-  },
-  {
-    id: 3,
-    title: "Festival Special",
-    subtitle: "Special discounts for festive season",
-    position: "Homepage Hero",
-    startDate: "2024-10-01",
-    endDate: "2024-11-01",
-    clicks: 320,
-    status: "Scheduled",
-    image: "https://via.placeholder.com/800x300?text=Festival+Special",
-  },
-];
+import DeleteBanner from "../../pages/banners/DeleteBanner";
+import { useBannerContext } from "../../context/BannerContext";
 
 const getStatusStyle = (status) => {
   switch (status) {
     case "Active":
-      return "bg-black text-white";
+      return "bg-green-100 text-green-800";
     case "Scheduled":
-      return "bg-gray-200 text-gray-700";
+      return "bg-yellow-100 text-yellow-800";
     case "Inactive":
       return "bg-red-100 text-red-600";
     default:
       return "bg-gray-100 text-gray-600";
   }
+};
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return "N/A";
+  return new Date(dateStr).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 };
 
 const Banners = () => {
@@ -63,36 +38,12 @@ const Banners = () => {
   const [showEditImage, setShowEditImage] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState(null);
 
-  const handleAddBanner = () => {
-    setShowCreate(true);
-    setSelectedBanner(null);
-  };
+  const { banners, loading, error, fetchAllBanners, deleteBanner } =
+    useBannerContext();
 
-  const handleEdit = (banner) => {
-    setSelectedBanner(banner);
-    setShowEdit(true);
-  };
-
-  const handlePreview = (banner) => {
-    setSelectedBanner(banner);
-    setShowPreview(true);
-  };
-
-  const handleDeleteClick = (banner) => {
-    setSelectedBanner(banner);
-    setShowDelete(true);
-  };
-
-  const handleEditImageClick = (banner) => {
-    setSelectedBanner(banner);
-    setShowEditImage(true);
-  };
-
-  const handleDeleteConfirm = (id) => {
-    console.log("Deleting banner with id:", id);
-    setShowDelete(false);
-    // Here you would typically call an API to delete the banner
-  };
+  useEffect(() => {
+    fetchAllBanners();
+  }, []);
 
   const closeAllModals = () => {
     setShowCreate(false);
@@ -103,65 +54,47 @@ const Banners = () => {
     setSelectedBanner(null);
   };
 
-  const [featuredBanner, ...otherBanners] = banners;
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteBanner(selectedBanner._id);
+      closeAllModals();
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
+  };
 
   return (
     <AdminLayout>
       <div className="relative space-y-6">
-        {/* Overlay for modals */}
-        {(showCreate || showEdit || showPreview || showDelete || showEditImage) && (
+        {(showCreate ||
+          showEdit ||
+          showPreview ||
+          showDelete ||
+          showEditImage) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
         )}
 
-        {/* Create Banner Modal */}
         {showCreate && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
-              <button
-                onClick={closeAllModals}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              >
-                <FiX className="w-6 h-6" />
-              </button>
-              <CreateBanner onClose={closeAllModals} />
-            </div>
-          </div>
+          <ModalWrapper onClose={closeAllModals}>
+            <CreateBanner onClose={closeAllModals} />
+          </ModalWrapper>
         )}
 
-        {/* Edit Banner Modal */}
         {showEdit && selectedBanner && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
-              <button
-                onClick={closeAllModals}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              >
-                <FiX className="w-6 h-6" />
-              </button>
-              <EditBanner banner={selectedBanner} onClose={closeAllModals} />
-            </div>
-          </div>
+          <ModalWrapper onClose={closeAllModals}>
+            <EditBanner banner={selectedBanner} onClose={closeAllModals} />
+          </ModalWrapper>
         )}
 
-        {/* Edit Banner Image Modal */}
         {showEditImage && selectedBanner && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-              <button
-                onClick={closeAllModals}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              >
-                <FiX className="w-6 h-6" />
-              </button>
-              <EditBannerImage banner={selectedBanner} onClose={closeAllModals} />
-            </div>
-          </div>
+          <ModalWrapper onClose={closeAllModals}>
+            <EditBannerImage banner={selectedBanner} onClose={closeAllModals} />
+          </ModalWrapper>
         )}
 
-        {/* Preview Banner Modal */}
         {showPreview && selectedBanner && (
           <PreviewBanner
-            bannerImages={[selectedBanner.image]}
+            bannerImages={selectedBanner.images}
             formData={{
               title: selectedBanner.title,
               subtitle: selectedBanner.subtitle,
@@ -172,10 +105,9 @@ const Banners = () => {
           />
         )}
 
-        {/* Delete Confirmation Modal */}
         {showDelete && selectedBanner && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <DeleteBanner 
+            <DeleteBanner
               banner={selectedBanner}
               onClose={closeAllModals}
               onConfirm={handleDeleteConfirm}
@@ -187,7 +119,7 @@ const Banners = () => {
         <div className="flex justify-between items-center flex-wrap gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Banners</h1>
           <button
-            onClick={handleAddBanner}
+            onClick={() => setShowCreate(true)}
             className="inline-flex items-center px-4 py-2 bg-pink-600 text-white text-sm font-medium rounded-md hover:bg-pink-700"
           >
             <FiPlus className="w-5 h-5 mr-2" />
@@ -195,93 +127,140 @@ const Banners = () => {
           </button>
         </div>
 
-        {/* Banners List */}
-        <div className="space-y-4">
-          {otherBanners.map((banner) => (
-            <div
-              key={banner.id}
-              className="bg-white p-5 rounded-lg shadow flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-4">
-               
-                <div className="space-y-1">
-                  <h2 className="text-lg font-semibold text-gray-800">
-                    {banner.title}
-                  </h2>
-                  <p className="text-sm text-gray-500">{banner.subtitle}</p>
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Position:</span>{" "}
-                    {banner.position}
-                  </p>
+        {/* Banner List */}
+        {loading ? (
+          <p>Loading banners...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : (
+          <div className="grid gap-6">
+            {banners.map((banner) => (
+              <div
+                key={banner._id}
+                className="bg-white rounded-lg shadow-md p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-10"
+              >
+                {/* Left: Image + Title Section */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-1/2">
+                  <img
+                    src={banner.images[0]?.url || "/placeholder.jpg"}
+                    alt={banner.title}
+                    className="w-full sm:w-32 h-20 object-cover rounded-md border"
+                  />
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {banner.title}
+                    </h2>
+                    <p className="text-sm text-gray-600">{banner.subtitle}</p>
+                    <p className="text-xs text-gray-400">
+                      Position: {banner.position}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-wrap gap-6 md:gap-12 text-sm text-gray-600">
-                <div>
-                  <span className="block font-medium text-gray-700">
-                    Start Date
-                  </span>
-                  {banner.startDate}
+                {/* Center: Info */}
+                <div className="flex flex-col sm:flex-row gap-3 text-sm text-gray-700 w-full md:w-auto">
+                  <div>
+                    <span className="block text-xs font-medium text-gray-500">
+                      Start Date
+                    </span>
+                    {formatDate(banner.startDate)}
+                  </div>
+                  <div>
+                    <span className="block text-xs font-medium text-gray-500">
+                      End Date
+                    </span>
+                    {formatDate(banner.endDate)}
+                  </div>
+                  <div>
+                    <span className="block text-xs font-medium text-gray-500">
+                      Clicks
+                    </span>
+                    {banner.clicks || 0}
+                  </div>
                 </div>
-                <div>
-                  <span className="block font-medium text-gray-700">
-                    End Date
-                  </span>
-                  {banner.endDate}
-                </div>
-                <div>
-                  <span className="block font-medium text-gray-700">
-                    Clicks
-                  </span>
-                  {banner.clicks.toLocaleString()}
-                </div>
-              </div>
 
-              <div className="flex flex-col md:items-end gap-3">
-                <span
-                  className={`px-3 py-1 text-xs font-medium rounded-full w-fit ${getStatusStyle(
-                    banner.status
-                  )}`}
-                >
-                  {banner.status}
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    title="Preview"
-                    onClick={() => handlePreview(banner)}
-                    className="border px-3 py-1 text-sm rounded hover:bg-gray-50"
+                {/* Right: Status + Actions */}
+                <div className="flex flex-col md:items-end gap-3 w-full md:w-auto">
+                  <span
+                    className={`px-3 py-1 text-xs font-medium rounded-full w-fit ${getStatusStyle(
+                      banner.status
+                    )}`}
                   >
-                    <FiEye />
-                  </button>
-                  <button
-                    title="Edit Image"
-                    onClick={() => handleEditImageClick(banner)}
-                    className="border px-3 py-1 text-sm rounded hover:bg-gray-50"
-                  >
-                    <FiImage />
-                  </button>
-                  <button
-                    title="Edit"
-                    onClick={() => handleEdit(banner)}
-                    className="border px-3 py-1 text-sm rounded hover:bg-gray-50"
-                  >
-                    <FiEdit2 />
-                  </button>
-                  <button
-                    title="Delete"
-                    onClick={() => handleDeleteClick(banner)}
-                    className="border px-3 py-1 text-sm rounded hover:bg-gray-50"
-                  >
-                    <FiTrash2 />
-                  </button>
+                    {banner.status}
+                  </span>
+                  <div className="flex gap-2 flex-wrap">
+                    <IconBtn
+                      title="Preview"
+                      onClick={() => {
+                        setSelectedBanner(banner);
+                        console.log("Previewing Banner:", banner);
+                        setShowPreview(true);
+                      }}
+                    >
+                      <FiEye />
+                    </IconBtn>
+                    <IconBtn
+                      title="Edit Image"
+                      onClick={() => {
+                        setSelectedBanner(banner);
+                        setShowEditImage(true);
+                      }}
+                    >
+                      <FiImage />
+                    </IconBtn>
+                    <IconBtn
+                      title="Edit"
+                      onClick={() => {
+                        setSelectedBanner(banner);
+                        setShowEdit(true);
+                      }}
+                    >
+                      <FiEdit2 />
+                    </IconBtn>
+                    <IconBtn
+                      title="Delete"
+                      onClick={() => {
+                        setSelectedBanner(banner);
+                        setShowDelete(true);
+                      }}
+                    >
+                      <FiTrash2 />
+                    </IconBtn>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
 };
+
+// Utility Components
+
+const IconBtn = ({ onClick, children, title }) => (
+  <button
+    title={title}
+    onClick={onClick}
+    className="border px-3 py-1 text-sm rounded hover:bg-gray-100"
+  >
+    {children}
+  </button>
+);
+
+const ModalWrapper = ({ children, onClose }) => (
+  <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+      >
+        <FiX className="w-6 h-6" />
+      </button>
+      {children}
+    </div>
+  </div>
+);
 
 export default Banners;

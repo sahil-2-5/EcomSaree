@@ -77,6 +77,16 @@ exports.getAllBanners = async (req, res) => {
   }
 };
 
+// Get Active Banners
+exports.getActiveBanners = async (req, res) => {
+  try {
+    const banners = await Banner.find({ status: 'active' }).sort({ position: 1 });
+    return res.status(200).json({ success: true, data: banners });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // Get Single Banner by ID
 exports.getBannerById = async (req, res) => {
   try {
@@ -103,15 +113,6 @@ exports.updateBanner = async (req, res) => {
     }
 
     const updates = req.body;
-
-    // If image updated
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.path, "banners");
-      updates.images = {
-        id: uuidv4(),
-        url: result.secure_url,
-      };
-    }
 
     const updatedBanner = await Banner.findByIdAndUpdate(
       req.params.id,
@@ -177,7 +178,6 @@ exports.updateSingleBannerImage = async (req, res) => {
     const newImage = {
       id: uuidv4(),
       url: newUrl,
-      filename: req.file.originalname,
     };
 
     banner.images[imageIndex] = newImage;

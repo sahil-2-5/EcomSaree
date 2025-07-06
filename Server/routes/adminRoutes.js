@@ -94,7 +94,7 @@ router.put("/update-banner/:id", AuthAdminId, upload.none(), updateBanner);
 router.put(
   "/update-banner-image/:bannerId/:imageId",
   AuthAdminId,
-  upload.single("image"),
+  upload.single("file"),
   updateSingleBannerImage
 );
 router.delete("/delete-banner/:id", AuthAdminId, deleteBanner);

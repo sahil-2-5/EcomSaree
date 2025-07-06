@@ -54,7 +54,7 @@ const {
 } = require("../controllers/wishlistController");
 
 const {
-  getAllBanners
+  getActiveBanners
 } = require("../controllers/bannerController");
 
 // Routes with `AuthClientId` middleware require a valid token
@@ -101,6 +101,6 @@ router.delete("/wishlist/remove/:productId", AuthClientId, removeFromWishlist);
 router.delete("/wishlist/clear", AuthClientId, clearWishlist);
 
 // Banner Routes
-router.get("/banners", getAllBanners);
+router.get("/banners", getActiveBanners);
 
 module.exports = router;
