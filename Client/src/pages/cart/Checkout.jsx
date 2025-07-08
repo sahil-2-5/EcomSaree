@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { useAddressContext } from "../../context/AddressContext";
+import { useOrder } from "../../context/OrderContext";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Checkout = () => {
   const [isEditing, setIsEditing] = useState(false);
   const { user } = useAuth();
   const { addresses } = useAddressContext();
+  const { openRazorpay } = useOrder();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -51,7 +53,8 @@ const Checkout = () => {
   }, [addresses, isEditing]);
 
   const subtotal = getCartTotal();
-  const shippingCost = subtotal > 999 ? 0 : 99;
+  // const shippingCost = subtotal > 999 ? 0 : 99;
+  const shippingCost = 0;
   const total = subtotal + shippingCost;
 
   const handleInputChange = (e) => {
@@ -64,10 +67,31 @@ const Checkout = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Implement order submission logic here
-    // After successful order placement:
-    clearCart();
-    navigate("/order-confirmation");
+
+    const shippingAddress = {
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      pincode: formData.pincode,
+    };
+
+    const items = cart.map((item) => ({
+      product: item.product._id,
+      title: item.product.title,
+      quantity: item.quantity,
+      price: item.product.sellingPrice,
+    }));
+
+    openRazorpay({
+      amount: total,
+      items,
+      shippingAddress,
+      navigate, // ✅ for redirection after success
+      clearCart, // ✅ for clearing cart after success
+    });
   };
 
   if (cart.length === 0) {
