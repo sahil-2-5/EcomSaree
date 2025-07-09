@@ -1,33 +1,52 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FiCheckCircle, FiClock, FiMail, FiPhone } from 'react-icons/fi';
-import Button from '../../components/common/Button';
 
 const OrderConfirmation = () => {
-  // Sample order data (replace with actual data from your backend)
-  const order = {
+  const location = useLocation();
+  const { order } = location.state || {};
+
+  // Fallback data if no state is passed
+  const defaultOrder = {
     id: 'ORD123456789',
     date: new Date().toLocaleDateString(),
-    total: 16098,
+    total: 0,
     paymentMethod: 'Credit Card',
     estimatedDelivery: '5-7 business days',
-    items: [  
-      {
-        id: 1,
-        name: 'Banarasi Silk Saree',
-        price: 15999,
-        quantity: 1,
-        image: '/images/saree1.jpg',
-      },
-    ],
+    items: [],
     shippingAddress: {
-      name: 'John Doe',
-      address: '123 Main Street',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400001',
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
     },
   };
+
+  const orderData = order || defaultOrder;
+
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white pt-18">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white border border-gray-200 p-12 text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Order Not Found
+            </h1>
+            <p className="text-gray-600 mb-6">
+              We couldn't find your order details. Please check your order history.
+            </p>
+            <Link 
+              to="/orders" 
+              className="inline-flex items-center px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium transition-colors duration-300"
+            >
+              View Your Orders
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white pt-18">
@@ -45,7 +64,7 @@ const OrderConfirmation = () => {
               Thank You for Your Order!
             </h1>
             <p className="text-lg text-gray-600">
-              Your order has been confirmed and will be shipped soon.
+              Your order #{orderData.id} has been confirmed and will be shipped soon.
             </p>
           </div>
 
@@ -59,19 +78,19 @@ const OrderConfirmation = () => {
               <div className="grid grid-cols-2 gap-8 text-sm">
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 uppercase">Order Number</p>
-                  <p className="font-medium text-gray-900">{order.id}</p>
+                  <p className="font-medium text-gray-900">{orderData.id}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 uppercase">Order Date</p>
-                  <p className="font-medium text-gray-900">{order.date}</p>
+                  <p className="font-medium text-gray-900">{orderData.date}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 uppercase">Total Amount</p>
-                  <p className="font-medium text-gray-900">₹{order.total.toLocaleString()}</p>
+                  <p className="font-medium text-gray-900">₹{orderData.total.toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-gray-500 uppercase">Payment Method</p>
-                  <p className="font-medium text-gray-900">{order.paymentMethod}</p>
+                  <p className="font-medium text-gray-900">{orderData.paymentMethod}</p>
                 </div>
               </div>
             </div>
@@ -86,7 +105,7 @@ const OrderConfirmation = () => {
                 <FiClock className="w-5 h-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium text-gray-900 mb-1">Estimated Delivery Time</p>
-                  <p className="text-sm text-gray-600">{order.estimatedDelivery}</p>
+                  <p className="text-sm text-gray-600">{orderData.estimatedDelivery}</p>
                 </div>
               </div>
             </div>
@@ -99,13 +118,13 @@ const OrderConfirmation = () => {
               </div>
               <div className="text-sm space-y-2">
                 <p className="font-medium text-gray-900">
-                  {order.shippingAddress.name}
+                  {orderData.shippingAddress.name}
                 </p>
-                <p className="text-gray-600">{order.shippingAddress.address}</p>
+                <p className="text-gray-600">{orderData.shippingAddress.address}</p>
                 <p className="text-gray-600">
-                  {order.shippingAddress.city}, {order.shippingAddress.state}
+                  {orderData.shippingAddress.city}, {orderData.shippingAddress.state}
                 </p>
-                <p className="text-gray-600">{order.shippingAddress.pincode}</p>
+                <p className="text-gray-600">{orderData.shippingAddress.pincode}</p>
               </div>
             </div>
 
@@ -116,7 +135,7 @@ const OrderConfirmation = () => {
                 <h2 className="text-xl font-bold text-gray-900">Order Items</h2>
               </div>
               <div className="space-y-4">
-                {order.items.map((item) => (
+                {orderData.items.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center gap-6 border border-gray-200 p-6"
@@ -189,12 +208,15 @@ const OrderConfirmation = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
-            <button className="inline-flex items-center px-8 py-3 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium transition-colors duration-300">
+            <Link 
+              to={`/orders/${orderData.id}`}
+              className="inline-flex items-center px-8 py-3 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium transition-colors duration-300"
+            >
               Track Order
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

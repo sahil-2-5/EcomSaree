@@ -53,7 +53,6 @@ const Checkout = () => {
   }, [addresses, isEditing]);
 
   const subtotal = getCartTotal();
-  // const shippingCost = subtotal > 999 ? 0 : 99;
   const shippingCost = 0;
   const total = subtotal + shippingCost;
 
@@ -65,33 +64,104 @@ const Checkout = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const shippingAddress = {
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-      city: formData.city,
-      state: formData.state,
-      pincode: formData.pincode,
-    };
+    try {
+      // Validate form data
+      const requiredFields = [
+        "firstName",
+        "lastName",
+        "email",
+        "phone",
+        "address",
+        "city",
+        "state",
+        "pincode",
+      ];
+      const missingFields = requiredFields.filter((field) => !formData[field]);
 
-    const items = cart.map((item) => ({
-      product: item.product._id,
-      title: item.product.title,
-      quantity: item.quantity,
-      price: item.product.sellingPrice,
-    }));
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Please fill in all required fields: ${missingFields.join(", ")}`
+        );
+      }
 
-    openRazorpay({
-      amount: total,
-      items,
-      shippingAddress,
-      navigate, // ✅ for redirection after success
-      clearCart, // ✅ for clearing cart after success
-    });
+      // Validate cart
+      if (!cart || cart.length === 0) {
+        throw new Error("Your cart is empty");
+      }
+
+      // Prepare shipping address
+      const shippingAddress = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+      };
+
+      // Prepare cart items with proper product reference
+      const items = cart.map((item) => ({
+        id: item.product._id,
+        product: item.product._id, // This is crucial for backend validation
+        name: item.product.title,
+        price: item.product.sellingPrice,
+        quantity: item.quantity,
+        image: item.product.images[0]?.url || "/placeholder.jpg",
+      }));
+
+      // Prepare order data
+      const orderData = {
+        id: `ORD${Math.floor(Math.random() * 1000000000)}`,
+        date: new Date().toISOString(), // Better for consistency
+        total,
+        paymentMethod: "Credit Card",
+        estimatedDelivery: "5-7 business days",
+        items,
+        shippingAddress,
+      };
+
+      // Process payment
+      await openRazorpay({
+        amount: total,
+        items,
+        shippingAddress,
+        orderData,
+        onSuccess: (paymentResponse) => {
+          // Combine payment details with order data
+          const completeOrder = {
+            ...orderData,
+            paymentId: paymentResponse.razorpay_payment_id,
+            orderId: paymentResponse.razorpay_order_id,
+            paymentStatus: "completed",
+          };
+
+          clearCart();
+          navigate("/order-confirmation", {
+            state: {
+              order: completeOrder,
+              paymentStatus: "success",
+            },
+          });
+        },
+        onError: (error) => {
+          navigate("/order-confirmation", {
+            state: {
+              order: orderData,
+              paymentStatus: "failed",
+              error: error.message,
+            },
+          });
+        },
+      });
+    } catch (error) {
+      // Handle any errors that occur during form submission
+      console.error("Checkout error:", error);
+      setCheckoutError(error.message);
+    }
   };
 
   if (cart.length === 0) {
@@ -114,10 +184,8 @@ const Checkout = () => {
           </p>
         </div>
         <div className="lg:grid lg:grid-cols-12 lg:gap-x-12">
-          {/* Checkout Form */}
           <div className="lg:col-span-7">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Contact Information */}
               <div className="bg-white border border-gray-200 p-8">
                 <div className="flex flex-col mb-8">
                   <span className="text-xs font-medium tracking-wide text-pink-700 uppercase mb-2">
@@ -205,7 +273,6 @@ const Checkout = () => {
                 </div>
               </div>
 
-              {/* Shipping Address */}
               <div className="bg-white border border-gray-200 p-8 mt-8">
                 <div className="flex flex-col mb-8">
                   <span className="text-xs font-medium tracking-wide text-pink-700 uppercase mb-2">
@@ -293,7 +360,6 @@ const Checkout = () => {
                 </div>
               </div>
 
-              {/* Payment Method */}
               <div className="bg-white border border-gray-200 p-8 mt-8">
                 <div className="flex flex-col mb-8">
                   <span className="text-xs font-medium tracking-wide text-pink-700 uppercase mb-2">
@@ -314,7 +380,6 @@ const Checkout = () => {
             </form>
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-5 mt-8 lg:mt-0">
             <div className="bg-white border border-gray-200 p-8 sticky top-8">
               <div className="flex flex-col mb-8">

@@ -4,16 +4,14 @@ import axios from "axios";
 // Create context
 const OrderContext = createContext();
 
-// Hook to use context
-export const useOrder = () => useContext(OrderContext);
-
 // Provider component
 export const OrderProvider = ({ children }) => {
   const [order, setOrder] = useState(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [error, setError] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // ✅ Step 1: Create Razorpay order
+  // Create Razorpay order
   const createOrder = async (amount) => {
     try {
       setIsPlacingOrder(true);
@@ -29,45 +27,83 @@ export const OrderProvider = ({ children }) => {
       );
 
       if (data.success && data.order) {
-        setOrder(data.order); // Razorpay order object
-        setIsPlacingOrder(false);
+        setOrder(data.order);
         return data.order;
       } else {
         throw new Error(data.message || "Failed to create Razorpay order");
       }
     } catch (err) {
-      setIsPlacingOrder(false);
       setError(
         err.response?.data?.error || err.message || "Order creation error"
       );
       throw err;
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 
-  // ✅ Step 2: Open Razorpay and verify payment
-  const openRazorpay = async ({ amount, items, shippingAddress, navigate, clearCart }) => {
+  // Open Razorpay and verify payment
+  const openRazorpay = async ({
+    amount,
+    items,
+    shippingAddress,
+    navigate,
+    clearCart,
+    onSuccess,
+    onError,
+  }) => {
     try {
-      const razorpayOrder = await createOrder(amount);
+      setIsProcessing(true);
+      
+      // Validate shipping address
+      const requiredAddressFields = [
+        "name", "email", "phone", "address", 
+        "city", "state", "pincode"
+      ];
+      
+      for (const field of requiredAddressFields) {
+        if (!shippingAddress[field]) {
+          throw new Error(`Missing shipping address field: ${field}`);
+        }
+      }
 
+      // Validate items
+      if (!items || items.length === 0) {
+        throw new Error("Cart is empty");
+      }
+
+      // Create Razorpay order
+      const razorpayOrder = await createOrder(amount);
+      
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID, // From .env
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         name: "Balaji Paithani",
-        description: "Order Payment",
+        description: `Payment for ${items.length} items`,
         order_id: razorpayOrder.id,
         handler: async function (response) {
           try {
+            setIsProcessing(true);
+            
+            // Prepare verification data
+            const verificationData = {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              items: items.map((item) => ({
+                product: item.id || item.product?._id || item.product?.$oid,
+                title: item.name || item.title || `Product ${item.id}`,
+                quantity: item.quantity || 1,
+                price: item.price || item.product?.sellingPrice,
+              })),
+              shippingAddress,
+              totalAmount: amount,
+            };
+
             const verifyRes = await axios.post(
               "http://localhost:2525/user/verify-payment",
-              {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                items,
-                shippingAddress,
-                totalAmount: amount,
-              },
+              verificationData,
               {
                 headers: {
                   "Content-Type": "application/json",
@@ -77,38 +113,67 @@ export const OrderProvider = ({ children }) => {
             );
 
             if (verifyRes.data.success) {
-              alert(
-                "✅ Payment Successful! Order ID: " +
-                  verifyRes.data.order.orderId
-              );
-              setOrder(verifyRes.data.order); // Saved backend order object
-
-              // ✅ Clear cart and redirect to confirmation page
               if (clearCart) clearCart();
-              if (navigate) navigate("/order-confirmation");
+              
+              if (onSuccess) {
+                onSuccess(verifyRes.data.order);
+              } else if (navigate) {
+                navigate("/order-confirmation", {
+                  state: { order: verifyRes.data.order },
+                });
+              }
             } else {
-              alert("❌ Payment verification failed");
+              throw new Error(
+                verifyRes.data.message || "Payment verification failed"
+              );
             }
           } catch (error) {
             console.error("Verification error:", error);
-            alert("❌ Payment verification error");
+            if (onError) {
+              onError(error);
+            } else {
+              setError(error.message);
+            }
+          } finally {
+            setIsProcessing(false);
           }
         },
         prefill: {
-          name: "balajipaithani",
-          email: "balajipaitanifashion@gmail.com",
-          contact: "9724690334",
+          name: shippingAddress.name,
+          email: shippingAddress.email,
+          contact: shippingAddress.phone,
         },
         theme: {
-          color: "#528ff0",
+          color: "#F472B6",
+        },
+        modal: {
+          ondismiss: () => {
+            setError("Payment window was closed without completing payment");
+          },
         },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.open();
+      
+      rzp.on('payment.failed', function (response) {
+        const error = new Error(response.error.description || "Payment failed");
+        if (onError) {
+          onError(error);
+        } else {
+          setError(error.message);
+        }
+      });
+
     } catch (err) {
-      console.error("Razorpay init failed:", err);
-      alert("❌ Unable to launch Razorpay: " + err.message);
+      console.error("Checkout error:", err);
+      if (onError) {
+        onError(err);
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -117,7 +182,9 @@ export const OrderProvider = ({ children }) => {
       value={{
         order,
         isPlacingOrder,
+        isProcessing,
         error,
+        setError,
         createOrder,
         openRazorpay,
       }}
@@ -127,4 +194,5 @@ export const OrderProvider = ({ children }) => {
   );
 };
 
-export const useOrderContext = () => useContext(OrderContext);
+// Custom hook to use order context
+export const useOrder = () => useContext(OrderContext);
