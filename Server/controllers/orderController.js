@@ -108,3 +108,127 @@ exports.verifyPayment = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// ✅ Get all orders (Admin only)
+// ✅ Get all orders
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .populate('user', 'name email'); // Include basic user info
+
+    res.status(200).json({
+      success: true,
+      count: orders.length, // Include count of orders
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching orders",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Get orders for logged-in user
+exports.getMyOrders = async (req, res) => {
+  try {
+    // Ensure user is authenticated
+    if (!req.user || !req.user._id) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: Invalid or missing token" });
+    }
+
+    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders,
+    });
+  } catch (error) {
+    console.error("Error fetching user orders:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// ✅ Get single order by ID
+exports.getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate(
+      "user",
+      "name email"
+    );
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Check if the user is authorized to view this order
+    if (
+      order.user._id.toString() !== req.user._id.toString() &&
+      !req.user.isAdmin
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized: You can only view your own orders" });
+    }
+
+    res.status(200).json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    console.error("Error fetching order by ID:", error.message);
+    if (error.kind === "ObjectId") {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// ✅ Update order status (Admin only)
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    // Check if user is admin
+    if (!req.user || !req.user.isAdmin) {
+      return res.status(403).json({ error: "Unauthorized: Admin access required" });
+    }
+
+    const { status } = req.body;
+    const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid order status" });
+    }
+
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    order.orderStatus = status;
+    
+    // Update deliveredAt date if status is delivered
+    if (status === "delivered") {
+      order.deliveredAt = new Date();
+    }
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error.message);
+    if (error.kind === "ObjectId") {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

@@ -3,13 +3,16 @@ import { AuthProvider } from "./context/AuthContext";
 import { ProductProvider } from "./context/ProductContext";
 import { BannerProvider } from "./context/BannerContext";
 import AppRoutes from "./RoutePath/RoutesPath";
+import { OrderProvider } from "./context/OrderContext";
 
 const App = () => {
   return (
     <AuthProvider>
       <ProductProvider>
         <BannerProvider>
-          <AppRoutes />
+          <OrderProvider>
+            <AppRoutes />
+          </OrderProvider>
         </BannerProvider>
       </ProductProvider>
     </AuthProvider>

@@ -42,6 +42,8 @@ const {
   deleteBanner,
 } = require("../controllers/bannerController");
 
+const { getAllOrders } = require("../controllers/orderController");
+
 // Routes with `AuthAdminId` middleware require a valid token
 
 // Admin Routes
@@ -89,5 +91,7 @@ router.put(
   updateSingleBannerImage
 );
 router.delete("/delete-banner/:id", AuthAdminId, deleteBanner);
+
+router.get("/orders", AuthAdminId, getAllOrders);
 
 module.exports = router;
