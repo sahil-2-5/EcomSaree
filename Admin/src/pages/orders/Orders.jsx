@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { FiEye, FiDownload, FiUser, FiPhone, FiMapPin, FiCalendar } from "react-icons/fi";
+import * as XLSX from "xlsx";
+import {
+  FiEye,
+  FiDownload,
+  FiUser,
+  FiPhone,
+  FiMapPin,
+  FiCalendar,
+} from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
 import { useOrderContext } from "../../context/OrderContext";
 
@@ -27,21 +35,85 @@ const Orders = () => {
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.shippingAddress.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.shippingAddress.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = 
+      order.shippingAddress.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      order.shippingAddress.email
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
       statusFilter === "all" || order.orderStatus === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
   const handleExport = () => {
-    console.log("Export orders");
+    // Prepare data for export
+    const dataToExport = filteredOrders.map((order) => ({
+      "Order ID": order.orderId,
+      "Customer Name": order.shippingAddress.name,
+      "Customer Email": order.shippingAddress.email,
+      Date: formatDate(order.createdAt),
+      Items: order.items.reduce((sum, item) => sum + item.quantity, 0),
+      "Total Amount": order.totalAmount,
+      "Payment Method": getPaymentMethodIcon(order.paymentMethod),
+      Status:
+        order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1),
+      Address: `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}`,
+      Phone: order.shippingAddress.phone,
+    }));
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+    // Set column widths
+    const wscols = [
+      { wch: 15 }, // Order ID
+      { wch: 20 }, // Customer Name
+      { wch: 25 }, // Customer Email
+      { wch: 12 }, // Date
+      { wch: 8 }, // Items
+      { wch: 12 }, // Total Amount
+      { wch: 15 }, // Payment Method
+      { wch: 12 }, // Status
+      { wch: 40 }, // Address
+      { wch: 15 }, // Phone
+    ];
+    ws["!cols"] = wscols;
+
+    // Format headers with bold style
+    const headerRange = XLSX.utils.decode_range(ws["!ref"]);
+    for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+      const headerCell = XLSX.utils.encode_cell({ r: headerRange.s.r, c: C });
+      if (!ws[headerCell]) continue;
+      ws[headerCell].s = { font: { bold: true } };
+    }
+
+    // Format currency cells
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+      const cell = XLSX.utils.encode_cell({ r: R, c: 5 }); // Column E (Total Amount)
+      if (!ws[cell]) continue;
+      ws[cell].z = "#,##0.00";
+    }
+
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Orders");
+
+    // Generate current date string for filename
+    const today = new Date();
+    const dateString = `${today.getFullYear()}-${(today.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
+
+    // Export the file
+    XLSX.writeFile(wb, `orders_${dateString}.xlsx`);
   };
 
   const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
@@ -87,8 +159,16 @@ const Orders = () => {
         <div className="bg-red-50 border-l-4 border-red-400 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg
+                className="h-5 w-5 text-red-400"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
             <div className="ml-3">
@@ -156,7 +236,7 @@ const Orders = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <select 
+          <select
             className="border px-3 py-2 rounded"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -217,7 +297,8 @@ const Orders = () => {
                     {formatDate(order.createdAt)}
                   </td>
                   <td className="p-4 text-gray-700">
-                    {order.items.reduce((sum, item) => sum + item.quantity, 0)} items
+                    {order.items.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+                    items
                   </td>
                   <td className="p-4 font-medium text-gray-900">
                     ₹{order.totalAmount.toLocaleString()}
@@ -227,7 +308,9 @@ const Orders = () => {
                   </td>
                   <td className="p-4">
                     <span
-                      className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusClass(order.orderStatus)}`}
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusClass(
+                        order.orderStatus
+                      )}`}
                     >
                       {order.orderStatus.charAt(0).toUpperCase() +
                         order.orderStatus.slice(1)}
@@ -280,7 +363,7 @@ const OrderDetails = ({ order, onClose }) => {
             ✕
           </button>
         </div>
-        
+
         <div className="space-y-6">
           {/* Order Summary */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -291,18 +374,28 @@ const OrderDetails = ({ order, onClose }) => {
               </h3>
               <div className="space-y-2">
                 <p className="text-sm">
-                  <span className="text-gray-500">Order ID:</span> {order.orderId}
+                  <span className="text-gray-500">Order ID:</span>{" "}
+                  {order.orderId}
                 </p>
                 <p className="text-sm">
-                  <span className="text-gray-500">Date:</span> {new Date(order.createdAt).toLocaleString()}
+                  <span className="text-gray-500">Date:</span>{" "}
+                  {new Date(order.createdAt).toLocaleString()}
                 </p>
                 <p className="text-sm">
-                  <span className="text-gray-500">Status:</span> 
-                  <span className={`ml-2 px-2 py-1 text-xs rounded-full ${order.orderStatus === 'pending' ? 'bg-gray-100 text-gray-800' : 
-                                  order.orderStatus === 'processing' ? 'bg-yellow-100 text-yellow-800' : 
-                                  order.orderStatus === 'shipped' ? 'bg-blue-100 text-blue-800' : 
-                                  'bg-green-100 text-green-800'}`}>
-                    {order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1)}
+                  <span className="text-gray-500">Status:</span>
+                  <span
+                    className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                      order.orderStatus === "pending"
+                        ? "bg-gray-100 text-gray-800"
+                        : order.orderStatus === "processing"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : order.orderStatus === "shipped"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {order.orderStatus.charAt(0).toUpperCase() +
+                      order.orderStatus.slice(1)}
                   </span>
                 </p>
               </div>
@@ -315,13 +408,16 @@ const OrderDetails = ({ order, onClose }) => {
               </h3>
               <div className="space-y-2">
                 <p className="text-sm">
-                  <span className="text-gray-500">Name:</span> {order.shippingAddress.name}
+                  <span className="text-gray-500">Name:</span>{" "}
+                  {order.shippingAddress.name}
                 </p>
                 <p className="text-sm">
-                  <span className="text-gray-500">Email:</span> {order.shippingAddress.email}
+                  <span className="text-gray-500">Email:</span>{" "}
+                  {order.shippingAddress.email}
                 </p>
                 <p className="text-sm">
-                  <span className="text-gray-500">Phone:</span> {order.shippingAddress.phone}
+                  <span className="text-gray-500">Phone:</span>{" "}
+                  {order.shippingAddress.phone}
                 </p>
               </div>
             </div>
@@ -335,18 +431,26 @@ const OrderDetails = ({ order, onClose }) => {
             </h3>
             <div className="text-sm">
               <p>{order.shippingAddress.address}</p>
-              <p>{order.shippingAddress.city}, {order.shippingAddress.state}</p>
+              <p>
+                {order.shippingAddress.city}, {order.shippingAddress.state}
+              </p>
               <p>Pincode: {order.shippingAddress.pincode}</p>
             </div>
           </div>
 
           {/* Payment Information */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-3">Payment Information</h3>
+            <h3 className="font-medium text-gray-900 mb-3">
+              Payment Information
+            </h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-gray-500">Method</p>
-                <p>{order.paymentMethod === 'razorpay' ? 'UPI/Credit Card' : order.paymentMethod}</p>
+                <p>
+                  {order.paymentMethod === "razorpay"
+                    ? "UPI/Credit Card"
+                    : order.paymentMethod}
+                </p>
               </div>
               <div>
                 <p className="text-gray-500">Status</p>
@@ -354,7 +458,11 @@ const OrderDetails = ({ order, onClose }) => {
               </div>
               <div>
                 <p className="text-gray-500">Paid At</p>
-                <p>{order.paidAt ? new Date(order.paidAt).toLocaleString() : 'N/A'}</p>
+                <p>
+                  {order.paidAt
+                    ? new Date(order.paidAt).toLocaleString()
+                    : "N/A"}
+                </p>
               </div>
               <div>
                 <p className="text-gray-500">Amount</p>
@@ -380,8 +488,12 @@ const OrderDetails = ({ order, onClose }) => {
                   {order.items.map((item) => (
                     <tr key={item._id} className="border-t">
                       <td className="p-3">
-                        <div className="font-medium">Product ID: {item.product}</div>
-                        <div className="text-xs text-gray-500">SKU: {item._id}</div>
+                        <div className="font-medium">
+                          Product ID: {item.product}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          SKU: {item._id}
+                        </div>
                       </td>
                       <td className="p-3">₹{item.price.toLocaleString()}</td>
                       <td className="p-3">{item.quantity}</td>

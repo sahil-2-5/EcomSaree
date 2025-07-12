@@ -2,6 +2,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const Order = require("../models/Order");
+const User = require("../models/User")
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
@@ -34,6 +35,12 @@ exports.createOrder = async (req, res) => {
     };
 
     const order = await razorpay.orders.create(options);
+
+     await User.findByIdAndUpdate(
+      userId,
+      { $push: { orders: order.id } }
+    );
+
 
     if (!order) {
       return res.status(500).json({ error: "Failed to create Razorpay order" });

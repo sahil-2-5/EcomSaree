@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false, // Indicates if the user has verified their email
+      default: false,
     },
     agreedToTerms: {
       type: Boolean,
@@ -43,7 +43,8 @@ const userSchema = new mongoose.Schema(
         message: "Agreement to Terms & Privacy Policy is required",
       },
     },
-    addresses: [addressSchema], // Embedded address schema
+    addresses: [addressSchema],
+    orders: [String]
   },
   { timestamps: true }
 );
