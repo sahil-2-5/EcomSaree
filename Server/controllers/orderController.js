@@ -13,13 +13,12 @@ const razorpay = new Razorpay({
 // ✅ Create Razorpay Order
 exports.createOrder = async (req, res) => {
   try {
-    const { amount } = req.body;
+    const { amount, items, shippingAddress } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Invalid amount" });
     }
 
-    // Ensure user is authenticated
     if (!req.user || !req.user._id) {
       return res
         .status(401)
@@ -28,29 +27,45 @@ exports.createOrder = async (req, res) => {
 
     const userId = req.user._id;
 
+    // Step 1: Create Razorpay Order
     const options = {
-      amount: amount * 100, // amount in paise
+      amount: amount * 100,
       currency: "INR",
       receipt: crypto.randomBytes(10).toString("hex"),
     };
 
-    const order = await razorpay.orders.create(options);
+    const razorpayOrder = await razorpay.orders.create(options);
 
-     await User.findByIdAndUpdate(
-      userId,
-      { $push: { orders: order.id } }
-    );
-
-
-    if (!order) {
+    if (!razorpayOrder) {
       return res.status(500).json({ error: "Failed to create Razorpay order" });
     }
 
+    // Step 2: Save order in MongoDB
+    const localOrder = await Order.create({
+      orderId: razorpayOrder.id, // Razorpay order ID
+      user: userId,
+      items: items || [],
+      shippingAddress: shippingAddress || {},
+      totalAmount: amount,
+      paymentStatus: "pending",
+      orderStatus: "pending",
+      paymentMethod: "razorpay",
+      isPaid: false,
+    });
+
+    // Step 3: Push local Order ObjectId to user's orders array
+    await User.findByIdAndUpdate(userId, {
+      $push: { orders: localOrder.id }
+    });
+
+    // Step 4: Respond with Razorpay order and local DB order
     res.status(200).json({
       success: true,
-      order,
+      razorpayOrder,
+      localOrder,
       message: "Order created successfully",
     });
+
   } catch (error) {
     console.error("Error creating order:", error.message);
     res.status(500).json({ error: "Internal server error" });

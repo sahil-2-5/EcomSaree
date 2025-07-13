@@ -26,9 +26,9 @@ export const OrderProvider = ({ children }) => {
         }
       );
 
-      if (data.success && data.order) {
-        setOrder(data.order);
-        return data.order;
+      if (data.success && data.razorpayOrder && data.localOrder) {
+        setOrder(data.localOrder); // Store the MongoDB order
+        return data.razorpayOrder; // ✅ Return Razorpay order to open Razorpay window
       } else {
         throw new Error(data.message || "Failed to create Razorpay order");
       }
@@ -54,13 +54,18 @@ export const OrderProvider = ({ children }) => {
   }) => {
     try {
       setIsProcessing(true);
-      
+
       // Validate shipping address
       const requiredAddressFields = [
-        "name", "email", "phone", "address", 
-        "city", "state", "pincode"
+        "name",
+        "email",
+        "phone",
+        "address",
+        "city",
+        "state",
+        "pincode",
       ];
-      
+
       for (const field of requiredAddressFields) {
         if (!shippingAddress[field]) {
           throw new Error(`Missing shipping address field: ${field}`);
@@ -74,7 +79,7 @@ export const OrderProvider = ({ children }) => {
 
       // Create Razorpay order
       const razorpayOrder = await createOrder(amount);
-      
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: razorpayOrder.amount,
@@ -85,7 +90,7 @@ export const OrderProvider = ({ children }) => {
         handler: async function (response) {
           try {
             setIsProcessing(true);
-            
+
             // Prepare verification data
             const verificationData = {
               razorpay_order_id: response.razorpay_order_id,
@@ -114,7 +119,7 @@ export const OrderProvider = ({ children }) => {
 
             if (verifyRes.data.success) {
               if (clearCart) clearCart();
-              
+
               if (onSuccess) {
                 onSuccess(verifyRes.data.order);
               } else if (navigate) {
@@ -155,8 +160,8 @@ export const OrderProvider = ({ children }) => {
 
       const rzp = new window.Razorpay(options);
       rzp.open();
-      
-      rzp.on('payment.failed', function (response) {
+
+      rzp.on("payment.failed", function (response) {
         const error = new Error(response.error.description || "Payment failed");
         if (onError) {
           onError(error);
@@ -164,7 +169,6 @@ export const OrderProvider = ({ children }) => {
           setError(error.message);
         }
       });
-
     } catch (err) {
       console.error("Checkout error:", err);
       if (onError) {

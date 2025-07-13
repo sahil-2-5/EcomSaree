@@ -44,6 +44,8 @@ const {
 
 const { getAllOrders } = require("../controllers/orderController");
 
+const { getAllCustomer } = require("../controllers/customerController");
+
 // Routes with `AuthAdminId` middleware require a valid token
 
 // Admin Routes
@@ -92,6 +94,10 @@ router.put(
 );
 router.delete("/delete-banner/:id", AuthAdminId, deleteBanner);
 
+// Order Routes
 router.get("/orders", AuthAdminId, getAllOrders);
+
+// Customer Routes
+router.get("/customer", AuthAdminId, getAllCustomer);
 
 module.exports = router;
