@@ -44,12 +44,7 @@ const userSchema = new mongoose.Schema(
       },
     },
     addresses: [addressSchema],
-    orders: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Order",
-      },
-    ],
+    orders: [String],
   },
   { timestamps: true }
 );

@@ -1,50 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { FiEye, FiEdit2, FiTrash2, FiDownload, FiPlus } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
+import { useCustomerContext } from "../../context/CustomerContext"; // Import the context
 
 const Customers = () => {
-  const customers = [
-    {
-      id: "CUST001",
-      name: "Priya Sharma",
-      email: "priya.sharma@example.com",
-      contact: "+91 98765 43210",
-      orders: 12,
-      totalSpent: 45230,
-      status: "Active",
-      joinDate: "2023-08-15",
-    },
-    {
-      id: "CUST002",
-      name: "Rajesh Kumar",
-      email: "rajesh.kumar@example.com",
-      contact: "+91 87654 32109",
-      orders: 8,
-      totalSpent: 32150,
-      status: "Active",
-      joinDate: "2023-09-22",
-    },
-    {
-      id: "CUST003",
-      name: "Anita Desai",
-      email: "anita.desai@example.com",
-      contact: "+91 76543 21098",
-      orders: 15,
-      totalSpent: 67890,
-      status: "VIP",
-      joinDate: "2023-07-10",
-    },
-    {
-      id: "CUST004",
-      name: "Vikram Singh",
-      email: "vikram.singh@example.com",
-      contact: "+91 65432 10987",
-      orders: 3,
-      totalSpent: 12450,
-      status: "Inactive",
-      joinDate: "2024-01-05",
-    },
-  ];
+  const { customers, loading, error, fetchAllCustomers } = useCustomerContext();
+
+  // Fetch customers on component mount
+  useEffect(() => {
+    fetchAllCustomers();
+  }, []);
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -58,6 +23,44 @@ const Customers = () => {
         return "bg-gray-100 text-gray-600";
     }
   };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-600"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg
+                className="h-5 w-5 text-red-400"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -109,16 +112,16 @@ const Customers = () => {
             </thead>
             <tbody>
               {customers.map((cust) => (
-                <tr key={cust.id} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-800">{cust.id}</td>
+                <tr key={cust._id} className="hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-800">{cust.customerId}</td>
                   <td className="p-4">
-                    <div className="text-gray-800 font-medium">{cust.name}</div>
+                    <div className="text-gray-800 font-medium">{cust.customerName}</div>
                     <div className="text-xs text-gray-500">{cust.email}</div>
                   </td>
                   <td className="p-4 text-gray-700">{cust.contact}</td>
                   <td className="p-4 text-gray-700">{cust.orders}</td>
                   <td className="p-4 font-medium text-gray-900">
-                    ₹{cust.totalSpent.toLocaleString()}
+                    ₹{cust.totalSpent}
                   </td>
                   <td className="p-4">
                     <span

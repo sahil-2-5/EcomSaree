@@ -285,10 +285,10 @@ const Orders = () => {
                       <FiUser className="mr-2 text-gray-400" />
                       <div>
                         <div className="text-gray-800 font-medium">
-                          {order.shippingAddress.name}
+                          {order.shippingAddress?.name}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {order.shippingAddress.email}
+                         {order.shippingAddress?.email}
                         </div>
                       </div>
                     </div>

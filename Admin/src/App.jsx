@@ -4,6 +4,7 @@ import { ProductProvider } from "./context/ProductContext";
 import { BannerProvider } from "./context/BannerContext";
 import AppRoutes from "./RoutePath/RoutesPath";
 import { OrderProvider } from "./context/OrderContext";
+import { CustomerProvider } from "./context/CustomerContext";
 
 const App = () => {
   return (
@@ -11,7 +12,9 @@ const App = () => {
       <ProductProvider>
         <BannerProvider>
           <OrderProvider>
-            <AppRoutes />
+            <CustomerProvider>
+              <AppRoutes />
+            </CustomerProvider>
           </OrderProvider>
         </BannerProvider>
       </ProductProvider>

@@ -2,7 +2,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const Order = require("../models/Order");
-const User = require("../models/User")
+const User = require("../models/User");
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
@@ -41,7 +41,7 @@ exports.createOrder = async (req, res) => {
     }
 
     // Step 2: Save order in MongoDB
-    const localOrder = await Order.create({
+    const localOrder = {
       orderId: razorpayOrder.id, // Razorpay order ID
       user: userId,
       items: items || [],
@@ -51,12 +51,7 @@ exports.createOrder = async (req, res) => {
       orderStatus: "pending",
       paymentMethod: "razorpay",
       isPaid: false,
-    });
-
-    // Step 3: Push local Order ObjectId to user's orders array
-    await User.findByIdAndUpdate(userId, {
-      $push: { orders: localOrder.id }
-    });
+    };
 
     // Step 4: Respond with Razorpay order and local DB order
     res.status(200).json({
@@ -65,7 +60,6 @@ exports.createOrder = async (req, res) => {
       localOrder,
       message: "Order created successfully",
     });
-
   } catch (error) {
     console.error("Error creating order:", error.message);
     res.status(500).json({ error: "Internal server error" });
@@ -120,6 +114,10 @@ exports.verifyPayment = async (req, res) => {
 
     await newOrder.save();
 
+    await User.findByIdAndUpdate(userId, {
+      $push: { orders: newOrder.orderId },
+    });
+
     res.status(200).json({
       success: true,
       message: "Payment verified and order placed successfully",
@@ -137,7 +135,7 @@ exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
       .sort({ createdAt: -1 }) // Sort by newest first
-      .populate('user', 'name email'); // Include basic user info
+      .populate("user", "name email"); // Include basic user info
 
     res.status(200).json({
       success: true,
@@ -163,7 +161,9 @@ exports.getMyOrders = async (req, res) => {
         .json({ error: "Unauthorized: Invalid or missing token" });
     }
 
-    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ user: req.user._id }).sort({
+      createdAt: -1,
+    });
 
     res.status(200).json({
       success: true,
@@ -216,11 +216,19 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     // Check if user is admin
     if (!req.user || !req.user.isAdmin) {
-      return res.status(403).json({ error: "Unauthorized: Admin access required" });
+      return res
+        .status(403)
+        .json({ error: "Unauthorized: Admin access required" });
     }
 
     const { status } = req.body;
-    const validStatuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
+    const validStatuses = [
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid order status" });
@@ -233,7 +241,7 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     order.orderStatus = status;
-    
+
     // Update deliveredAt date if status is delivered
     if (status === "delivered") {
       order.deliveredAt = new Date();
