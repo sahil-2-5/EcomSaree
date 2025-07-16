@@ -18,7 +18,7 @@ export const CustomerProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.get("http://localhost:2525/admin/customer", {
-        withCredentials: true
+        withCredentials: true,
       });
       setCustomers(res.data.data);
       setError(null);
@@ -33,9 +33,12 @@ export const CustomerProvider = ({ children }) => {
   const fetchCustomerById = async (id) => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:2525/admin/customer/${id}`, {
-        withCredentials: true
-      });
+      const res = await axios.get(
+        `http://localhost:2525/admin/customer/${id}`,
+        {
+          withCredentials: true,
+        }
+      );
       return res.data.data;
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch customer");
@@ -56,7 +59,9 @@ export const CustomerProvider = ({ children }) => {
       fetchAllCustomers(); // Refresh list
       return res.data;
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update customer status");
+      setError(
+        err.response?.data?.message || "Failed to update customer status"
+      );
       throw err;
     }
   };
@@ -65,12 +70,18 @@ export const CustomerProvider = ({ children }) => {
   const fetchCustomerOrders = async (customerId) => {
     try {
       const res = await axios.get(
-        `http://localhost:2525/admin/customer/${customerId}/orders`,
-        { withCredentials: true }
+        `http://localhost:2525/admin/get-my-orders/${customerId}`,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
       );
-      return res.data.data || [];
+      console.log(res.data);
+      return res.data.orders || [];
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch customer orders");
+      setError(
+        err.response?.data?.message || "Failed to fetch customer orders"
+      );
       return [];
     }
   };

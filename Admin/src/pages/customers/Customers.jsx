@@ -1,10 +1,17 @@
-import React, { useEffect } from "react";
+// pages/admin/Customers.js
+import React, { useEffect, useState } from "react";
 import { FiEye, FiEdit2, FiTrash2, FiDownload, FiPlus } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
-import { useCustomerContext } from "../../context/CustomerContext"; // Import the context
+import { useCustomerContext } from "../../context/CustomerContext";
+import ViewCustomerOrders from "../customers/ViewCustomerOrders";
 
 const Customers = () => {
-  const { customers, loading, error, fetchAllCustomers } = useCustomerContext();
+  const { customers, loading, error, fetchAllCustomers, fetchCustomerOrders } = useCustomerContext();
+  const [showOrdersModal, setShowOrdersModal] = useState(false);
+  const [customerOrders, setCustomerOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // Fetch customers on component mount
   useEffect(() => {
@@ -14,7 +21,7 @@ const Customers = () => {
   const getStatusStyle = (status) => {
     switch (status) {
       case "Active":
-        return "bg-black text-white";
+        return "bg-green-500 text-white";
       case "VIP":
         return "bg-gray-100 text-gray-800";
       case "Inactive":
@@ -22,6 +29,53 @@ const Customers = () => {
       default:
         return "bg-gray-100 text-gray-600";
     }
+  };
+
+  const determineCustomerStatus = (customer) => {
+    const now = new Date();
+    const lastOrderDate = new Date(customer.lastOrderDate);
+    const daysSinceLastOrder = Math.floor(
+      (now - lastOrderDate) / (1000 * 60 * 60 * 24)
+    );
+
+    if (customer.isVIP) {
+      return "VIP";
+    }
+
+    if (customer.totalSpent > 10000 || customer.orders > 50) {
+      return "VIP";
+    }
+
+    if (daysSinceLastOrder <= 30) {
+      return "Active";
+    }
+
+    if (daysSinceLastOrder > 90) {
+      return "Inactive";
+    }
+
+    return "Active";
+  };
+
+  const handleViewOrders = async (cust) => {
+    setSelectedCustomer(cust);
+    setOrdersLoading(true);
+    setShowOrdersModal(true);
+    setOrdersError(null);
+    try {
+      const orders = await fetchCustomerOrders(cust?._id);
+      setCustomerOrders(orders || []);
+    } catch (err) {
+      setOrdersError(err.message || "Failed to fetch orders");
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const closeOrdersModal = () => {
+    setShowOrdersModal(false);
+    setCustomerOrders([]);
+    setSelectedCustomer(null);
   };
 
   if (loading) {
@@ -64,7 +118,18 @@ const Customers = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 relative">
+        {/* Orders Modal */}
+        {showOrdersModal && (
+          <ViewCustomerOrders
+            selectedCustomer={selectedCustomer}
+            customerOrders={customerOrders}
+            ordersLoading={ordersLoading}
+            ordersError={ordersError}
+            onClose={closeOrdersModal}
+          />
+        )}
+
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center gap-4">
           <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
@@ -113,9 +178,13 @@ const Customers = () => {
             <tbody>
               {customers.map((cust) => (
                 <tr key={cust._id} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-800">{cust.customerId}</td>
+                  <td className="p-4 font-medium text-gray-800">
+                    {cust.customerId}
+                  </td>
                   <td className="p-4">
-                    <div className="text-gray-800 font-medium">{cust.customerName}</div>
+                    <div className="text-gray-800 font-medium">
+                      {cust.customerName}
+                    </div>
                     <div className="text-xs text-gray-500">{cust.email}</div>
                   </td>
                   <td className="p-4 text-gray-700">{cust.contact}</td>
@@ -126,22 +195,19 @@ const Customers = () => {
                   <td className="p-4">
                     <span
                       className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusStyle(
-                        cust.status
+                        determineCustomerStatus(cust)
                       )}`}
                     >
-                      {cust.status}
+                      {determineCustomerStatus(cust)}
                     </span>
                   </td>
                   <td className="p-4 text-gray-700">{cust.joinDate}</td>
-                  <td className="p-4 flex gap-3 text-gray-700">
-                    <button title="View">
-                      <FiEye className="hover:text-pink-600" />
-                    </button>
-                    <button title="Edit">
-                      <FiEdit2 className="hover:text-blue-600" />
-                    </button>
-                    <button title="Delete">
-                      <FiTrash2 className="hover:text-red-600" />
+                  <td className="p-4">
+                    <button 
+                      onClick={() => handleViewOrders(cust)}
+                      className="px-4 py-1 rounded-lg text-white bg-pink-600 hover:bg-pink-700 transition-colors"
+                    >
+                      View Orders
                     </button>
                   </td>
                 </tr>

@@ -42,7 +42,7 @@ const {
   deleteBanner,
 } = require("../controllers/bannerController");
 
-const { getAllOrders } = require("../controllers/orderController");
+const { getAllOrders, getMyOrders } = require("../controllers/orderController");
 
 const { getAllCustomer } = require("../controllers/customerController");
 
@@ -96,6 +96,7 @@ router.delete("/delete-banner/:id", AuthAdminId, deleteBanner);
 
 // Order Routes
 router.get("/orders", AuthAdminId, getAllOrders);
+router.get("/get-my-orders/:userId", AuthAdminId, getMyOrders);
 
 // Customer Routes
 router.get("/customer", AuthAdminId, getAllCustomer);

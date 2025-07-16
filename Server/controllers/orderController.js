@@ -130,7 +130,6 @@ exports.verifyPayment = async (req, res) => {
 };
 
 // ✅ Get all orders (Admin only)
-// ✅ Get all orders
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -154,14 +153,15 @@ exports.getAllOrders = async (req, res) => {
 // ✅ Get orders for logged-in user
 exports.getMyOrders = async (req, res) => {
   try {
-    // Ensure user is authenticated
-    if (!req.user || !req.user._id) {
-      return res
-        .status(401)
-        .json({ error: "Unauthorized: Invalid or missing token" });
+    // Get user ID from URL parameters
+    const userId = req.params.userId;
+
+    // Validate the user ID
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
     }
 
-    const orders = await Order.find({ user: req.user._id }).sort({
+    const orders = await Order.find({ user: userId }).sort({
       createdAt: -1,
     });
 

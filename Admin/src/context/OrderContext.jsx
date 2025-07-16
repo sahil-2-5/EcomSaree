@@ -31,10 +31,10 @@ export const OrderProvider = ({ children }) => {
   };
 
   // Fetch Single Order by ID
-  const fetchOrderById = async (id) => {
+  const fetchOrderByUserId = async (id) => {
     setLoading(true);
     try {
-      const res = await axios.get(`/api/orders/${id}`, {
+      const res = await axios.get(`http://localhost:2525/admin/get-my-orders/${id}`, {
         withCredentials: true,
       });
       setCurrentOrder(res.data.order);
@@ -91,7 +91,7 @@ export const OrderProvider = ({ children }) => {
         loading,
         error,
         fetchAllOrders,
-        fetchOrderById,
+        fetchOrderByUserId,
         updateOrderStatus,
         setCurrentOrder,
         setError,
