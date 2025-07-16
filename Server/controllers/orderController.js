@@ -134,7 +134,13 @@ exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
       .sort({ createdAt: -1 }) // Sort by newest first
-      .populate("user", "name email"); // Include basic user info
+      .populate("user", "name email") // Include basic user info
+      .populate({
+        path: "items.product",
+        model: "Product",
+        select:
+          "images title price sellingPrice offerPercentage description filter", // Select the fields you want
+      });
 
     res.status(200).json({
       success: true,

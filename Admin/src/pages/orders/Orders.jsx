@@ -10,6 +10,7 @@ import {
 } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
 import { useOrderContext } from "../../context/OrderContext";
+import OrderDetailsModal from "./OrderDetailsModal";
 
 const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -288,7 +289,7 @@ const Orders = () => {
                           {order.shippingAddress?.name}
                         </div>
                         <div className="text-xs text-gray-500">
-                         {order.shippingAddress?.email}
+                          {order.shippingAddress?.email}
                         </div>
                       </div>
                     </div>
@@ -341,190 +342,12 @@ const Orders = () => {
 
       {/* Order Details Modal */}
       {selectedOrder && (
-        <OrderDetails
+        <OrderDetailsModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
         />
       )}
     </AdminLayout>
-  );
-};
-
-const OrderDetails = ({ order, onClose }) => {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-start mb-4">
-          <h2 className="text-xl font-bold">Order Details</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="space-y-6">
-          {/* Order Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-                <FiCalendar className="mr-2" />
-                Order Information
-              </h3>
-              <div className="space-y-2">
-                <p className="text-sm">
-                  <span className="text-gray-500">Order ID:</span>{" "}
-                  {order.orderId}
-                </p>
-                <p className="text-sm">
-                  <span className="text-gray-500">Date:</span>{" "}
-                  {new Date(order.createdAt).toLocaleString()}
-                </p>
-                <p className="text-sm">
-                  <span className="text-gray-500">Status:</span>
-                  <span
-                    className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                      order.orderStatus === "pending"
-                        ? "bg-gray-100 text-gray-800"
-                        : order.orderStatus === "processing"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : order.orderStatus === "shipped"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-green-100 text-green-800"
-                    }`}
-                  >
-                    {order.orderStatus.charAt(0).toUpperCase() +
-                      order.orderStatus.slice(1)}
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-                <FiUser className="mr-2" />
-                Customer Details
-              </h3>
-              <div className="space-y-2">
-                <p className="text-sm">
-                  <span className="text-gray-500">Name:</span>{" "}
-                  {order.shippingAddress.name}
-                </p>
-                <p className="text-sm">
-                  <span className="text-gray-500">Email:</span>{" "}
-                  {order.shippingAddress.email}
-                </p>
-                <p className="text-sm">
-                  <span className="text-gray-500">Phone:</span>{" "}
-                  {order.shippingAddress.phone}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Shipping Address */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-3 flex items-center">
-              <FiMapPin className="mr-2" />
-              Shipping Address
-            </h3>
-            <div className="text-sm">
-              <p>{order.shippingAddress.address}</p>
-              <p>
-                {order.shippingAddress.city}, {order.shippingAddress.state}
-              </p>
-              <p>Pincode: {order.shippingAddress.pincode}</p>
-            </div>
-          </div>
-
-          {/* Payment Information */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-3">
-              Payment Information
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-gray-500">Method</p>
-                <p>
-                  {order.paymentMethod === "razorpay"
-                    ? "UPI/Credit Card"
-                    : order.paymentMethod}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Status</p>
-                <p className="capitalize">{order.paymentStatus}</p>
-              </div>
-              <div>
-                <p className="text-gray-500">Paid At</p>
-                <p>
-                  {order.paidAt
-                    ? new Date(order.paidAt).toLocaleString()
-                    : "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-500">Amount</p>
-                <p>₹{order.totalAmount.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div>
-            <h3 className="font-medium text-gray-900 mb-3">Order Items</h3>
-            <div className="border rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr className="text-left text-gray-500">
-                    <th className="p-3">Product</th>
-                    <th className="p-3">Price</th>
-                    <th className="p-3">Qty</th>
-                    <th className="p-3">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {order.items.map((item) => (
-                    <tr key={item._id} className="border-t">
-                      <td className="p-3">
-                        <div className="font-medium">
-                          Product ID: {item.product}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          SKU: {item._id}
-                        </div>
-                      </td>
-                      <td className="p-3">₹{item.price.toLocaleString()}</td>
-                      <td className="p-3">{item.quantity}</td>
-                      <td className="p-3 font-medium">
-                        ₹{(item.price * item.quantity).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Order Summary */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex justify-between border-b pb-2 mb-2">
-              <span className="text-gray-500">Subtotal</span>
-              <span>₹{order.totalAmount.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between border-b pb-2 mb-2">
-              <span className="text-gray-500">Shipping</span>
-              <span>Free</span>
-            </div>
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span>₹{order.totalAmount.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 };
 

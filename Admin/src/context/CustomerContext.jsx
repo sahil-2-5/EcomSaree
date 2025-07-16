@@ -76,7 +76,6 @@ export const CustomerProvider = ({ children }) => {
           withCredentials: true,
         }
       );
-      console.log(res.data);
       return res.data.orders || [];
     } catch (err) {
       setError(
