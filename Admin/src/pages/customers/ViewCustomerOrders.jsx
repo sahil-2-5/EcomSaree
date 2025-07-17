@@ -7,13 +7,21 @@ const ViewCustomerOrders = ({
   ordersError,
   onClose,
 }) => {
+  // Calculate total orders count
+  const totalOrdersCount = customerOrders?.length || 0;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[80vh] overflow-y-auto">
         <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-          <h2 className="text-xl font-bold">
-            Orders of {selectedCustomer?.customerName}
-          </h2>
+          <div>
+            <h2 className="text-xl font-bold">
+              Orders of {selectedCustomer?.customerName || "Customer"}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Total Orders: {totalOrdersCount}
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -21,85 +29,99 @@ const ViewCustomerOrders = ({
             <FiX size={24} />
           </button>
         </div>
-
         {ordersLoading ? (
           <div className="flex justify-center items-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-pink-600"></div>
           </div>
         ) : ordersError ? (
           <div className="p-4 text-red-500">{ordersError}</div>
-        ) : customerOrders.length === 0 ? (
+        ) : customerOrders?.length === 0 ? (
           <div className="p-4 text-gray-500">
             No orders found for this customer
           </div>
         ) : (
           <div className="p-4">
-            <table className="w-full text-sm divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr className="text-xs font-medium text-gray-500 uppercase">
-                  <th className="p-3 text-left">Order ID</th>
-                  <th className="p-3 text-left">Date</th>
-                  <th className="p-3 text-left">Items</th>
-                  <th className="p-3 text-left">Amount</th>
-                  <th className="p-3 text-left">Status</th>
-                  <th className="p-3 text-left">Product</th>
-                </tr>
-              </thead>
-              {console.log(customerOrders)}
-              <tbody>
-                {customerOrders.map((order) => {
-                  const firstItem = order.items?.[0];
-                  const product = firstItem?.product;
-                  const productImage = product?.images?.[0]?.url;
-
-                  return (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr className="text-xs font-medium text-gray-500 uppercase">
+                    <th className="p-3 text-left">Order ID</th>
+                    <th className="p-3 text-left">Date</th>
+                    <th className="p-3 text-left">Items</th>
+                    <th className="p-3 text-left">Amount</th>
+                    <th className="p-3 text-left">Payment</th>
+                    <th className="p-3 text-left">Status</th>
+                    <th className="p-3 text-left">Products</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {customerOrders?.map((order) => (
                     <tr key={order._id} className="hover:bg-gray-50">
                       <td className="p-3 font-medium text-gray-800">
-                        {order.orderId || order._id}
+                        {order.orderId}
                       </td>
                       <td className="p-3 text-gray-700">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
                       <td className="p-3 text-gray-700">
-                        {order.items?.length || 0} items
+                        {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
                       </td>
                       <td className="p-3 font-medium text-gray-900">
-                        ₹{order.totalAmount || 0}
+                        ₹{order.totalAmount.toLocaleString()}
                       </td>
                       <td className="p-3">
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            order.status === "completed"
+                            order.paymentStatus === "completed"
                               ? "bg-green-100 text-green-800"
-                              : order.status === "cancelled"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {order.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            order.orderStatus === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : order.orderStatus === "cancelled"
                               ? "bg-red-100 text-red-800"
                               : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
-                          {order.status || "pending"}
+                          {order.orderStatus}
                         </span>
                       </td>
-                      <td className="p-3 flex items-center gap-2">
-                        {productImage ? (
-                          <img
-                            src={productImage}
-                            alt={product?.title}
-                            className="w-10 h-10 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-xs">
-                            N/A
-                          </div>
-                        )}
-                        <span className="text-xs text-gray-700">
-                          {product?.title || "No Title"}
-                        </span>
+                      <td className="p-3">
+                        <div className="flex flex-col gap-2">
+                          {order.items.map((item, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <img
+                                src={item.product.imageUrl}
+                                alt={item.product.title}
+                                className="w-10 h-10 object-cover rounded"
+                                onError={(e) => {
+                                  e.target.src = "https://via.placeholder.com/40?text=No+Image";
+                                }}
+                              />
+                              <div>
+                                <p className="text-xs font-medium text-gray-800 line-clamp-1">
+                                  {item.product.title || 'Unknown Product'}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  ₹{item._doc.price?.toLocaleString() || '0'}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
