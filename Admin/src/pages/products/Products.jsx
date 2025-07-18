@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiEdit2, FiTrash2, FiPlus, FiEye, FiImage, FiFilter, FiX } from "react-icons/fi";
+import { FiEdit2, FiTrash2, FiPlus, FiEye, FiImage, FiFilter, FiX, FiCheck } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
 import Button from "../../components/common/Button";
 import { useProductContext } from "../../context/ProductContext";
@@ -17,15 +17,24 @@ const Products = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    category: "",
-    status: "",
-    minPrice: "",
-    maxPrice: ""
+    priceRange: "",
+    colors: [],
+    materials: [],
+    occasions: []
   });
   const [filteredProducts, setFilteredProducts] = useState([]);
 
-  // Get unique categories from products
-  const categories = [...new Set(products.map(p => p.filter.material))];
+  // Get unique values for filters
+  const colors = [...new Set(products.map(p => p.filter.color))];
+  const materials = ["Silk", "Cotton", "Georgette", "Chiffon", "Crepe"];
+  const occasions = ["Wedding", "Party", "Casual", "Festival", "Office"];
+  const priceRanges = [
+    { label: "All Prices", value: "" },
+    { label: "Under ₹1,000", value: "0-999" },
+    { label: "₹1,000 - ₹5,000", value: "1000-5000" },
+    { label: "₹5,000 - ₹10,000", value: "5000-10000" },
+    { label: "Above ₹10,000", value: "10000-999999" }
+  ];
 
   useEffect(() => {
     // Apply filters whenever products or filter values change
@@ -38,29 +47,32 @@ const Products = () => {
       );
     }
 
-    // Apply category filter
-    if (filters.category) {
-      result = result.filter(
-        product => product.filter.material === filters.category
-      );
-    }
-
-    // Apply status filter
-    if (filters.status) {
-      result = result.filter(
-        product => product.status?.toLowerCase() === filters.status.toLowerCase()
-      );
-    }
-
     // Apply price range filter
-    if (filters.minPrice) {
+    if (filters.priceRange) {
+      const [min, max] = filters.priceRange.split('-').map(Number);
       result = result.filter(
-        product => product.sellingPrice >= Number(filters.minPrice)
+        product => product.sellingPrice >= min && product.sellingPrice <= max
       );
     }
-    if (filters.maxPrice) {
+
+    // Apply color filter
+    if (filters.colors.length > 0) {
       result = result.filter(
-        product => product.sellingPrice <= Number(filters.maxPrice)
+        product => filters.colors.includes(product.filter.color)
+      );
+    }
+
+    // Apply material filter
+    if (filters.materials.length > 0) {
+      result = result.filter(
+        product => filters.materials.includes(product.filter.material)
+      );
+    }
+
+    // Apply occasion filter
+    if (filters.occasions.length > 0) {
+      result = result.filter(
+        product => filters.occasions.some(occ => product.filter.occasion.includes(occ))
       );
     }
 
@@ -88,7 +100,7 @@ const Products = () => {
       : "bg-violet-500 text-white";
   };
 
-  // Calculate product counts based on filtered products
+  // Calculate product metrics
   const totalProducts = filteredProducts.length;
   const activeProducts = filteredProducts.filter(
     (p) => p.status?.toLowerCase() === "active"
@@ -96,18 +108,29 @@ const Products = () => {
   const draftProducts = filteredProducts.filter(
     (p) => p.status?.toLowerCase() === "draft"
   ).length;
-  const outOfStockProducts = filteredProducts.filter(
-    (p) => p.availableQuantity <= 0
-  ).length;
+  const totalInventoryValue = filteredProducts.reduce(
+    (sum, product) => sum + (product.sellingPrice * product.availableQuantity),
+    0
+  );
 
   const resetFilters = () => {
     setFilters({
-      category: "",
-      status: "",
-      minPrice: "",
-      maxPrice: ""
+      priceRange: "",
+      colors: [],
+      materials: [],
+      occasions: []
     });
     setSearchTerm("");
+  };
+
+  const toggleFilter = (filterType, value) => {
+    setFilters(prev => {
+      const currentValues = prev[filterType];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter(v => v !== value)
+        : [...currentValues, value];
+      return { ...prev, [filterType]: newValues };
+    });
   };
 
   return (
@@ -144,9 +167,9 @@ const Products = () => {
             </h2>
           </div>
           <div className="bg-white p-4 rounded shadow-sm">
-            <p className="text-sm text-gray-500">Out of Stock</p>
-            <h2 className="text-xl font-bold text-red-500">
-              {outOfStockProducts}
+            <p className="text-sm text-gray-500">Total Value</p>
+            <h2 className="text-xl font-bold text-blue-600">
+              ₹{totalInventoryValue.toLocaleString()}
             </h2>
           </div>
         </div>
@@ -184,72 +207,87 @@ const Products = () => {
         {/* Filter Panel */}
         {showFilters && (
           <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Price Range */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <select
-                  className="w-full border rounded p-2"
-                  value={filters.category}
-                  onChange={(e) =>
-                    setFilters({ ...filters, category: e.target.value })
-                  }
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
+                <h3 className="font-medium mb-3">PRICE RANGE</h3>
+                <div className="space-y-2">
+                  {priceRanges.map((range) => (
+                    <div 
+                      key={range.value}
+                      className={`flex items-center p-2 rounded cursor-pointer ${filters.priceRange === range.value ? 'bg-pink-100' : 'hover:bg-gray-100'}`}
+                      onClick={() => setFilters({...filters, priceRange: range.value})}
+                    >
+                      <div className={`w-4 h-4 rounded-full border mr-2 flex items-center justify-center ${filters.priceRange === range.value ? 'border-pink-500 bg-pink-500' : 'border-gray-300'}`}>
+                        {filters.priceRange === range.value && <FiCheck className="text-white text-xs" />}
+                      </div>
+                      <span>{range.label}</span>
+                    </div>
                   ))}
-                </select>
+                </div>
               </div>
 
+              {/* Colors */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  className="w-full border rounded p-2"
-                  value={filters.status}
-                  onChange={(e) =>
-                    setFilters({ ...filters, status: e.target.value })
-                  }
-                >
-                  <option value="">All Statuses</option>
-                  <option value="active">Active</option>
-                  <option value="draft">Draft</option>
-                </select>
+                <h3 className="font-medium mb-3">COLORS</h3>
+                <div className="space-y-2">
+                  {colors.map((color) => (
+                    <div 
+                      key={color}
+                      className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-100"
+                      onClick={() => toggleFilter('colors', color)}
+                    >
+                      <div className={`w-4 h-4 rounded-full border mr-2 flex items-center justify-center ${filters.colors.includes(color) ? 'border-pink-500 bg-pink-500' : 'border-gray-300'}`}>
+                        {filters.colors.includes(color) && <FiCheck className="text-white text-xs" />}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span 
+                          className="w-4 h-4 rounded-full inline-block"
+                          style={{ backgroundColor: color.toLowerCase() }}
+                        ></span>
+                        <span>{color}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
+              {/* Materials */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Min Price
-                </label>
-                <input
-                  type="number"
-                  className="w-full border rounded p-2"
-                  placeholder="Min"
-                  value={filters.minPrice}
-                  onChange={(e) =>
-                    setFilters({ ...filters, minPrice: e.target.value })
-                  }
-                />
+                <h3 className="font-medium mb-3">MATERIALS</h3>
+                <div className="space-y-2">
+                  {materials.map((material) => (
+                    <div 
+                      key={material}
+                      className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-100"
+                      onClick={() => toggleFilter('materials', material)}
+                    >
+                      <div className={`w-4 h-4 rounded-full border mr-2 flex items-center justify-center ${filters.materials.includes(material) ? 'border-pink-500 bg-pink-500' : 'border-gray-300'}`}>
+                        {filters.materials.includes(material) && <FiCheck className="text-white text-xs" />}
+                      </div>
+                      <span>{material}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
+              {/* Occasions */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Max Price
-                </label>
-                <input
-                  type="number"
-                  className="w-full border rounded p-2"
-                  placeholder="Max"
-                  value={filters.maxPrice}
-                  onChange={(e) =>
-                    setFilters({ ...filters, maxPrice: e.target.value })
-                  }
-                />
+                <h3 className="font-medium mb-3">OCCASIONS</h3>
+                <div className="space-y-2">
+                  {occasions.map((occasion) => (
+                    <div 
+                      key={occasion}
+                      className="flex items-center p-2 rounded cursor-pointer hover:bg-gray-100"
+                      onClick={() => toggleFilter('occasions', occasion)}
+                    >
+                      <div className={`w-4 h-4 rounded-full border mr-2 flex items-center justify-center ${filters.occasions.includes(occasion) ? 'border-pink-500 bg-pink-500' : 'border-gray-300'}`}>
+                        {filters.occasions.includes(occasion) && <FiCheck className="text-white text-xs" />}
+                      </div>
+                      <span>{occasion}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -266,53 +304,57 @@ const Products = () => {
         )}
 
         {/* Active Filters Display */}
-        {(filters.category || filters.status || filters.minPrice || filters.maxPrice) && (
+        {(filters.priceRange || filters.colors.length > 0 || filters.materials.length > 0 || filters.occasions.length > 0) && (
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-sm text-gray-500">Active filters:</span>
-            {filters.category && (
+            {filters.priceRange && (
               <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                Category: {filters.category}
+                {priceRanges.find(r => r.value === filters.priceRange)?.label}
                 <button
-                  onClick={() => setFilters({ ...filters, category: "" })}
+                  onClick={() => setFilters({...filters, priceRange: ""})}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FiX size={14} />
                 </button>
               </span>
             )}
-            {filters.status && (
-              <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                Status: {filters.status}
+            {filters.colors.map(color => (
+              <span key={color} className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                <span 
+                  className="w-3 h-3 rounded-full inline-block"
+                  style={{ backgroundColor: color.toLowerCase() }}
+                ></span>
+                {color}
                 <button
-                  onClick={() => setFilters({ ...filters, status: "" })}
+                  onClick={() => toggleFilter('colors', color)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FiX size={14} />
                 </button>
               </span>
-            )}
-            {filters.minPrice && (
-              <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                Min: ₹{filters.minPrice}
+            ))}
+            {filters.materials.map(material => (
+              <span key={material} className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                {material}
                 <button
-                  onClick={() => setFilters({ ...filters, minPrice: "" })}
+                  onClick={() => toggleFilter('materials', material)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FiX size={14} />
                 </button>
               </span>
-            )}
-            {filters.maxPrice && (
-              <span className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                Max: ₹{filters.maxPrice}
+            ))}
+            {filters.occasions.map(occasion => (
+              <span key={occasion} className="bg-gray-100 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                {occasion}
                 <button
-                  onClick={() => setFilters({ ...filters, maxPrice: "" })}
+                  onClick={() => toggleFilter('occasions', occasion)}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <FiX size={14} />
                 </button>
               </span>
-            )}
+            ))}
           </div>
         )}
 
@@ -322,10 +364,11 @@ const Products = () => {
             <thead className="bg-gray-50">
               <tr className="text-left text-xs font-medium text-gray-500 uppercase">
                 <th className="p-4">Product</th>
-                <th className="p-4">Category</th>
+                <th className="p-4">Material</th>
+                <th className="p-4">Color</th>
+                <th className="p-4">Occasions</th>
                 <th className="p-4">Price</th>
                 <th className="p-4">Stock</th>
-                <th className="p-4">Sales</th>
                 <th className="p-4">Status</th>
                 <th className="p-4">Actions</th>
               </tr>
@@ -352,17 +395,38 @@ const Products = () => {
                     </div>
                   </td>
                   <td className="p-4">{product.filter.material}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-2">
+                      <span 
+                        className="w-4 h-4 rounded-full inline-block"
+                        style={{ backgroundColor: product.filter.color.toLowerCase() }}
+                      ></span>
+                      {product.filter.color}
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex flex-wrap gap-1">
+                      {product.filter.occasion.map(occ => (
+                        <span key={occ} className="text-xs bg-gray-100 px-2 py-0.5 rounded">
+                          {occ}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
                   <td className="p-4 font-medium">₹{product.sellingPrice}</td>
                   <td className="p-4">
-                    {product.availableQuantity < 10 ? (
+                    {product.availableQuantity <= 0 ? (
                       <span className="text-red-600 font-semibold">
+                        {product.availableQuantity}
+                      </span>
+                    ) : product.availableQuantity < 10 ? (
+                      <span className="text-orange-500 font-semibold">
                         {product.availableQuantity}
                       </span>
                     ) : (
                       product.availableQuantity
                     )}
                   </td>
-                  <td className="p-4">{product.sales || 0}</td>
                   <td className="p-4">
                     <span
                       className={`text-xs font-medium px-3 py-1 rounded-full ${getStatusBadge(

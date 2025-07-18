@@ -25,7 +25,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     { icon: FiShoppingBag, label: "Orders", path: "/admin/orders" },
     { icon: FiUsers, label: "Customers", path: "/admin/customers" },
     { icon: FiImage, label: "Banners", path: "/admin/banners" },
-    { icon: FiPackage, label: "Inventory", path: "/admin/inventory" },
     { icon: FiBarChart2, label: "Reports", path: "/admin/reports" },
     { icon: FiSettings, label: "Settings", path: "/admin/settings" },
   ];
