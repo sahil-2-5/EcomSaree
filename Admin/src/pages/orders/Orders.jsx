@@ -7,6 +7,7 @@ import {
   FiPhone,
   FiMapPin,
   FiCalendar,
+  FiChevronDown,
 } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
 import { useOrderContext } from "../../context/OrderContext";
@@ -16,7 +17,13 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const { orders, loading, error, fetchAllOrders } = useOrderContext();
+  const { 
+    orders, 
+    loading, 
+    error, 
+    fetchAllOrders,
+    updateOrderStatus 
+  } = useOrderContext();
 
   useEffect(() => {
     fetchAllOrders();
@@ -48,6 +55,16 @@ const Orders = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      // The context will automatically update the orders list
+    } catch (err) {
+      console.error("Failed to update order status:", err);
+      // Error is already handled by the context
+    }
+  };
 
   const handleExport = () => {
     // Prepare data for export
@@ -318,13 +335,32 @@ const Orders = () => {
                     </span>
                   </td>
                   <td className="p-4 text-gray-700">
-                    <button
-                      onClick={() => setSelectedOrder(order)}
-                      title="View Order"
-                      className="hover:text-pink-600"
-                    >
-                      <FiEye />
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        title="View Order"
+                        className="hover:text-pink-600"
+                      >
+                        <FiEye />
+                      </button>
+                      <div className="relative">
+                        <select
+                          value={order.orderStatus}
+                          onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                          className={`appearance-none px-2 py-1 text-xs rounded ${getStatusClass(
+                            order.orderStatus
+                          )} pr-6 focus:outline-none focus:ring-1 focus:ring-gray-300`}
+                          disabled={loading}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <FiChevronDown className="absolute right-1 top-1/2 transform -translate-y-1/2 text-xs pointer-events-none" />
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))}

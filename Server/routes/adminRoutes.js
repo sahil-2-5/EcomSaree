@@ -42,7 +42,11 @@ const {
   deleteBanner,
 } = require("../controllers/bannerController");
 
-const { getAllOrders, getMyOrders } = require("../controllers/orderController");
+const {
+  getAllOrders,
+  getMyOrders,
+  updateOrderStatus,
+} = require("../controllers/orderController");
 
 const { getAllCustomer } = require("../controllers/customerController");
 
@@ -97,6 +101,7 @@ router.delete("/delete-banner/:id", AuthAdminId, deleteBanner);
 // Order Routes
 router.get("/orders", AuthAdminId, getAllOrders);
 router.get("/get-my-orders/:userId", AuthAdminId, getMyOrders);
+router.put("/update-order-status/:orderId", AuthAdminId, updateOrderStatus);
 
 // Customer Routes
 router.get("/customer", AuthAdminId, getAllCustomer);

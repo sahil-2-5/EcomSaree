@@ -168,13 +168,13 @@ exports.getMyOrders = async (req, res) => {
     const orders = await Order.find({ user: userId })
       .sort({ createdAt: -1 })
       .populate({
-        path: 'items.product',
-        select: 'title images.url price' // Include price in the populated data
+        path: "items.product",
+        select: "title images.url price", // Include price in the populated data
       });
 
     res.status(200).json({
       success: true,
-      orders: orders.map(order => order.toObject()) // Convert Mongoose documents to plain objects
+      orders: orders.map((order) => order.toObject()), // Convert Mongoose documents to plain objects
     });
   } catch (error) {
     console.error("Error fetching user orders:", error.message);
@@ -220,14 +220,17 @@ exports.getOrderById = async (req, res) => {
 // ✅ Update order status (Admin only)
 exports.updateOrderStatus = async (req, res) => {
   try {
+
     // Check if user is admin
-    if (!req.user || !req.user.isAdmin) {
+    if (!req.admin._id) {
       return res
         .status(403)
         .json({ error: "Unauthorized: Admin access required" });
     }
 
     const { status } = req.body;
+    const { orderId } = req.params;
+
     const validStatuses = [
       "pending",
       "processing",
@@ -240,7 +243,7 @@ exports.updateOrderStatus = async (req, res) => {
       return res.status(400).json({ error: "Invalid order status" });
     }
 
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(orderId);
 
     if (!order) {
       return res.status(404).json({ error: "Order not found" });

@@ -31,30 +31,33 @@ export const OrderProvider = ({ children }) => {
   };
 
   // Update Order Status (Admin only)
-  const updateOrderStatus = async (id, status) => {
+  const updateOrderStatus = async (orderId, status) => {
     setLoading(true);
+    setError(null);
+    
     try {
-      const res = await axios.put(
-        `/api/orders/${id}/status`,
+      const { data } = await axios.put(
+        `http://localhost:2525/admin/update-order-status/${orderId}`,
         { status },
         { withCredentials: true }
       );
 
-      // Update the order in the list
-      setOrders((prev) =>
-        prev.map((order) => (order._id === id ? res.data.order : order))
-      );
-
-      // Update current order if it's the one being updated
-      if (currentOrder?._id === id) {
-        setCurrentOrder(res.data.order);
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order._id === orderId ? data.order : order
+      ));
+      
+      if (currentOrder?._id === orderId) {
+        setCurrentOrder(data.order);
       }
 
-      setError(null);
-      return res.data.order;
+      return data.order;
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update order status");
-      throw err;
+      const errorMessage = err.response?.data?.error || 
+                         err.message || 
+                         'Failed to update order status';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
