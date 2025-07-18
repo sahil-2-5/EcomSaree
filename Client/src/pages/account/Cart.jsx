@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { FaTrashAlt } from "react-icons/fa";
 import { useCartContext } from "../../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const {
@@ -15,6 +16,8 @@ const Cart = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate();
 
   const loadCart = async () => {
     setIsLoading(true);
@@ -53,13 +56,7 @@ const Cart = () => {
   };
 
   const handleCheckout = async () => {
-    const res = await checkout();
-    if (res.success) {
-      alert("Checkout successful!");
-      await loadCart(); // Optionally clear or refresh cart
-    } else {
-      alert(res.message);
-    }
+    navigate("/cart");
   };
 
   if (isLoading) return <p className="text-center py-4">Loading cart...</p>;
@@ -67,7 +64,9 @@ const Cart = () => {
 
   return (
     <div className="bg-white border rounded-lg p-6 shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Shopping Cart</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">
+        Shopping Cart
+      </h2>
 
       {cart.length === 0 ? (
         <p className="text-sm text-gray-500">Your cart is empty.</p>
@@ -94,7 +93,9 @@ const Cart = () => {
                       className="w-16 h-16 rounded object-cover border"
                     />
                     <div>
-                      <h3 className="font-medium text-gray-800">{product.title}</h3>
+                      <h3 className="font-medium text-gray-800">
+                        {product.title}
+                      </h3>
                       <p className="text-sm text-gray-600">
                         {product.sellingPrice} x {item.quantity}
                       </p>

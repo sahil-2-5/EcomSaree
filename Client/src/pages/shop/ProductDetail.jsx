@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FiMinus, FiPlus, FiHeart, FiShare2 } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";

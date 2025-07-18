@@ -159,10 +159,8 @@ exports.getAllOrders = async (req, res) => {
 // ✅ Get orders for logged-in user
 exports.getMyOrders = async (req, res) => {
   try {
-    // Get user ID from URL parameters
     const userId = req.params.userId;
 
-    // Validate the user ID
     if (!userId) {
       return res.status(400).json({ error: "User ID is required" });
     }
@@ -170,26 +168,13 @@ exports.getMyOrders = async (req, res) => {
     const orders = await Order.find({ user: userId })
       .sort({ createdAt: -1 })
       .populate({
-        path: 'items.product', // assuming your Order schema has an 'items' array with 'product' references
-        select: 'title images.url' // only get the title and image URLs
+        path: 'items.product',
+        select: 'title images.url price' // Include price in the populated data
       });
-
-    // Optionally, you might want to transform the data to make it more client-friendly
-    const transformedOrders = orders.map(order => ({
-      ...order.toObject(),
-      items: order.items.map(item => ({
-        ...item,
-        product: {
-          title: item.product?.title,
-          imageUrl: item.product?.images[0]?.url // get the first image URL
-        }
-      }))
-    }));
 
     res.status(200).json({
       success: true,
-      count: orders.length,
-      orders: transformedOrders, // or just 'orders' if you don't want to transform
+      orders: orders.map(order => order.toObject()) // Convert Mongoose documents to plain objects
     });
   } catch (error) {
     console.error("Error fetching user orders:", error.message);

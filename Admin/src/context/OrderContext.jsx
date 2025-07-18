@@ -30,24 +30,6 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
-  // Fetch Single Order by ID
-  const fetchOrderByUserId = async (id) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`http://localhost:2525/admin/get-my-orders/${id}`, {
-        withCredentials: true,
-      });
-      setCurrentOrder(res.data.order);
-      setError(null);
-      return res.data.order;
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch order");
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Update Order Status (Admin only)
   const updateOrderStatus = async (id, status) => {
     setLoading(true);
@@ -91,7 +73,6 @@ export const OrderProvider = ({ children }) => {
         loading,
         error,
         fetchAllOrders,
-        fetchOrderByUserId,
         updateOrderStatus,
         setCurrentOrder,
         setError,

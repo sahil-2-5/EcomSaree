@@ -181,6 +181,21 @@ export const OrderProvider = ({ children }) => {
     }
   };
 
+    // Fetch Order by ID
+  const fetchOrderByUserId = async (id) => {
+    try {
+      const res = await axios.get(`http://localhost:2525/user/get-my-orders/${id}`, {
+        withCredentials: true,
+      });
+      setError(null);
+      return res.data.orders;
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to fetch order");
+      return null;
+    } finally {
+    }
+  };
+
   return (
     <OrderContext.Provider
       value={{
@@ -191,6 +206,7 @@ export const OrderProvider = ({ children }) => {
         setError,
         createOrder,
         openRazorpay,
+        fetchOrderByUserId
       }}
     >
       {children}
@@ -198,5 +214,4 @@ export const OrderProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use order context
 export const useOrder = () => useContext(OrderContext);
