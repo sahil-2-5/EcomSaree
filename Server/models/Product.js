@@ -74,6 +74,11 @@ const productSchema = new mongoose.Schema(
       type: filterSchema,
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["active", "draft"],
+      default: "draft",
+    },
     admin: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",

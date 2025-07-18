@@ -19,6 +19,7 @@ const ProductForm = ({ onClose }) => {
       color: "",
     },
     inStock: true,
+    status: "draft", // Added status field with default value
   });
 
   const [imageFiles, setImageFiles] = useState([]);
@@ -28,7 +29,7 @@ const ProductForm = ({ onClose }) => {
   const materialOptions = ["Silk", "Cotton", "Georgette", "Chiffon", "Crepe"];
   const occasionOptions = ["Wedding", "Party", "Casual", "Festival", "Office"];
   const colorOptions = ["Red", "Blue", "Green", "Yellow", "Purple"];
-
+  const statusOptions = ["draft", "active"];
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -115,6 +116,7 @@ const ProductForm = ({ onClose }) => {
     data.append("inStock", formData.inStock);
     data.append("description", JSON.stringify(formData.description));
     data.append("filter", JSON.stringify(formData.filter));
+    data.append("status", formData.status); // Added status to form data
     imageFiles.forEach((file) => data.append("images", file));
 
     await addProduct(data);
@@ -322,6 +324,27 @@ const ProductForm = ({ onClose }) => {
                     </label>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Status Field - New Section */}
+            <div>
+              <h3 className="text-lg font-semibold text-pink-500 mb-2">
+                Product Status
+              </h3>
+              <div className="flex flex-wrap gap-4">
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full sm:w-[48%] p-2 border rounded focus:ring-2 focus:ring-pink-500"
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

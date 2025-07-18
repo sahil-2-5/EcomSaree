@@ -4,7 +4,6 @@ const uploadToCloudinary = require("../uploads/cloudinaryStorage");
 
 exports.addProduct = async (req, res) => {
   try {
-
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
@@ -46,6 +45,7 @@ exports.addProduct = async (req, res) => {
           ? JSON.parse(req.body.filter)
           : req.body.filter,
       admin: req.admin._id, // authenticated admin
+      status: "draft", // Default status for new products
     };
 
     // Save to DB
@@ -68,7 +68,23 @@ exports.addProduct = async (req, res) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const { status } = req.query;
+    const filter = {};
+    
+    // If status is specified in query, filter by that status
+    if (status) {
+      if (!['active', 'draft'].includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status value. Must be either 'active' or 'draft'",
+        });
+      }
+      filter.status = status;
+    } 
+    // If no status specified, fetch all products (both active and draft)
+    // No need to set filter.status in this case
+
+    const products = await Product.find(filter);
     res.status(200).json({
       success: true,
       products,
@@ -116,6 +132,7 @@ exports.updateProduct = async (req, res) => {
       inStock,
       description,
       filter,
+      status, // Add status field
     } = req.body;
 
     const parsedDescription =
@@ -132,6 +149,7 @@ exports.updateProduct = async (req, res) => {
       inStock: inStock === "false" ? false : true,
       description: parsedDescription,
       filter: parsedFilter,
+      status, // Include status in update
     };
 
     // 🛠️ Update in DB
