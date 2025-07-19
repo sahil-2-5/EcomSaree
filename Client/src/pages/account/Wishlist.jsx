@@ -81,10 +81,10 @@ const Wishlist = () => {
                   <div>
                     <h3 className="font-medium text-gray-800">{item.title}</h3>
                     <p className="text-sm text-gray-600 line-through">
-                      ${item.price}
+                      {item.price} /-
                     </p>
                     <p className="text-sm text-pink-600 font-semibold">
-                      ${item.sellingPrice}
+                      {item.sellingPrice} /-
                     </p>
                     <p className="text-xs text-gray-400">Color: {item.color}</p>
                   </div>

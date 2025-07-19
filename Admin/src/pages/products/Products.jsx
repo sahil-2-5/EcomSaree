@@ -169,7 +169,7 @@ const Products = () => {
           <div className="bg-white p-4 rounded shadow-sm">
             <p className="text-sm text-gray-500">Total Value</p>
             <h2 className="text-xl font-bold text-blue-600">
-              ₹{totalInventoryValue.toLocaleString()}
+              {totalInventoryValue.toLocaleString()} /-
             </h2>
           </div>
         </div>

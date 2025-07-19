@@ -9,7 +9,6 @@ import {
   FiImage,
   FiPackage,
   FiBarChart2,
-  FiSettings,
   FiMenu,
   FiX,
   FiLogIn,
@@ -25,8 +24,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     { icon: FiShoppingBag, label: "Orders", path: "/admin/orders" },
     { icon: FiUsers, label: "Customers", path: "/admin/customers" },
     { icon: FiImage, label: "Banners", path: "/admin/banners" },
-    { icon: FiBarChart2, label: "Reports", path: "/admin/reports" },
-    { icon: FiSettings, label: "Settings", path: "/admin/settings" },
   ];
 
   const isActive = (path) => location.pathname === path;

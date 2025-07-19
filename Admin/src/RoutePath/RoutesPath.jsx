@@ -6,8 +6,6 @@ import Products from "../pages/products/Products";
 import Orders from "../pages/orders/Orders";
 import Customers from "../pages/customers/Customers";
 import Banners from "../pages/banners/Banners";
-import Reports from "../pages/reports/Reports";
-import Settings from "../pages/settings/Settings";
 
 import Login from "../auth/Login";
 import Register from "../auth/Register";
@@ -26,8 +24,6 @@ const RoutesPath = () => {
         <Route path="/admin/orders" element={<Orders />} />
         <Route path="/admin/customers" element={<Customers />} />
         <Route path="/admin/banners" element={<Banners />} />
-        <Route path="/admin/reports" element={<Reports />} />
-        <Route path="/admin/settings" element={<Settings />} />
 
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/register" element={<Register />} />

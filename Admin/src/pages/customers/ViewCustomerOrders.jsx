@@ -98,7 +98,7 @@ const ViewCustomerOrders = ({
                           {order.items.map((item, index) => (
                             <div key={index} className="flex items-center gap-2">
                               <img
-                                src={item.product.imageUrl}
+                                src={item.product.images[index].url}
                                 alt={item.product.title}
                                 className="w-10 h-10 object-cover rounded"
                                 onError={(e) => {
@@ -110,7 +110,7 @@ const ViewCustomerOrders = ({
                                   {item.product.title || 'Unknown Product'}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  ₹{item._doc.price?.toLocaleString() || '0'}
+                                  ₹{item.price?.toLocaleString() || '0'}
                                 </p>
                               </div>
                             </div>

@@ -347,9 +347,7 @@ const Orders = () => {
                         <select
                           value={order.orderStatus}
                           onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                          className={`appearance-none px-2 py-1 text-xs rounded ${getStatusClass(
-                            order.orderStatus
-                          )} pr-6 focus:outline-none focus:ring-1 focus:ring-gray-300`}
+                          className={`appearance-none px-2 py-1 text-xs rounded pr-6 focus:outline-none focus:ring-1 focus:ring-gray-300`}
                           disabled={loading}
                         >
                           <option value="pending">Pending</option>
