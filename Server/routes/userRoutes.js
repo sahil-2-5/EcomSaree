@@ -33,8 +33,9 @@ const {
 } = require("../controllers/addressController");
 
 const {
-  getAllProducts,
+  getActiveProducts,
   getProductById,
+  getProductsByFilter
 } = require("../controllers/productController");
 
 const {
@@ -87,8 +88,9 @@ router.put("/update-address/:addressId", AuthClientId, updateAddress);
 router.delete("/delete-address/:addressId", AuthClientId, deleteAddress);
 
 // Product Routes
-router.get("/products", getAllProducts);
+router.get("/products", getActiveProducts);
 router.get("/product/:id", getProductById);
+router.get("/products/filter/:type/:value", getProductsByFilter);
 
 // Cart Routes
 router.post("/cart/add", AuthClientId, addToCart);

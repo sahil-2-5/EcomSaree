@@ -13,12 +13,10 @@ const filterSchema = new mongoose.Schema(
     material: {
       type: String,
       required: true,
-      enum: ["Silk", "Cotton", "Georgette", "Chiffon", "Crepe"], 
     },
     occasion: {
       type: [String],
       required: true,
-      enum: ["Wedding", "Party", "Casual", "Festival", "Office"], 
     },
     color: {
       type: String,
@@ -77,7 +75,7 @@ const productSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["active", "draft"],
-      default: "draft",
+      default: "active",
     },
     admin: {
       type: mongoose.Schema.Types.ObjectId,

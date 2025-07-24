@@ -19,17 +19,92 @@ const ProductForm = ({ onClose }) => {
       color: "",
     },
     inStock: true,
-    status: "draft", // Added status field with default value
+    status: "draft", // Set default to "draft"
   });
 
   const [imageFiles, setImageFiles] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  const materialOptions = ["Silk", "Cotton", "Georgette", "Chiffon", "Crepe"];
-  const occasionOptions = ["Wedding", "Party", "Casual", "Festival", "Office"];
-  const colorOptions = ["Red", "Blue", "Green", "Yellow", "Purple"];
-  const statusOptions = ["draft", "active"];
+  const materialOptions = [
+    "Silk",
+    "Paithani Silk",
+    "Banarasi Silk",
+    "Cotton",
+    "Georgette",
+    "Chiffon",
+    "Crepe",
+    "Linen",
+    "Wool",
+    "Satin",
+    "Velvet",
+    "Denim",
+    "Leather",
+    "Polyester",
+    "Rayon",
+    "Spandex",
+    "Cashmere",
+    "Jersey",
+    "Tulle",
+    "Organza",
+    "Taffeta",
+    "Brocade",
+  ];
+
+  const occasionOptions = [
+    "Wedding",
+    "Party",
+    "Casual",
+    "Festival",
+    "Office",
+    "Formal",
+    "Cocktail",
+    "Beach",
+    "Vacation",
+    "Date Night",
+    "Graduation",
+    "Prom",
+    "Bridal Shower",
+    "Baby Shower",
+    "Anniversary",
+    "Business Meeting",
+    "Interview",
+    "Brunch",
+    "Evening Out",
+    "Gala",
+  ];
+
+  const colorOptions = [
+    "Red",
+    "Magenta & Red",
+    "Blue",
+    "Green",
+    "Yellow",
+    "Purple",
+    "Black",
+    "White",
+    "Gray",
+    "Pink",
+    "Orange",
+    "Brown",
+    "Beige",
+    "Navy",
+    "Teal",
+    "Peacock",
+    "Maroon",
+    "Burgundy",
+    "Lavender",
+    "Mint",
+    "Olive",
+    "Turquoise",
+    "Gold",
+    "Silver",
+    "Rose Gold",
+    "Charcoal",
+    "Ivory",
+  ];
+  const statusOptions = ["draft", "active"]; // Changed order to show draft first
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -51,7 +126,6 @@ const ProductForm = ({ onClose }) => {
       })
       .catch((err) => console.error(err));
 
-    // Reset input value so that uploading the same file again works
     e.target.value = "";
   };
 
@@ -116,7 +190,7 @@ const ProductForm = ({ onClose }) => {
     data.append("inStock", formData.inStock);
     data.append("description", JSON.stringify(formData.description));
     data.append("filter", JSON.stringify(formData.filter));
-    data.append("status", formData.status); // Added status to form data
+    data.append("status", formData.status);
     imageFiles.forEach((file) => data.append("images", file));
 
     await addProduct(data);
@@ -327,7 +401,7 @@ const ProductForm = ({ onClose }) => {
               </div>
             </div>
 
-            {/* Status Field - New Section */}
+            {/* Status Field */}
             <div>
               <h3 className="text-lg font-semibold text-pink-500 mb-2">
                 Product Status
@@ -345,6 +419,24 @@ const ProductForm = ({ onClose }) => {
                     </option>
                   ))}
                 </select>
+                <div className="w-full sm:w-[48%] flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="inStock"
+                    name="inStock"
+                    checked={formData.inStock}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        inStock: e.target.checked,
+                      }))
+                    }
+                    className="h-5 w-5 accent-pink-500"
+                  />
+                  <label htmlFor="inStock" className="text-sm text-gray-700">
+                    In Stock
+                  </label>
+                </div>
               </div>
             </div>
 

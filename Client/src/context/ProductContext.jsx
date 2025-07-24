@@ -3,7 +3,6 @@ import {
   useContext,
   useState,
   useEffect,
-  Children,
 } from "react";
 import axios from "axios";
 
@@ -14,11 +13,13 @@ export const ProductProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Fetch all products
   const fetchAllProducts = async () => {
     setLoading(true);
     try {
       const res = await axios.get("http://localhost:2525/user/products");
       setProducts(res.data.products || []);
+      setError(null);
     } catch (err) {
       setError("Failed to fetch products");
     } finally {
@@ -26,6 +27,7 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  // Fetch product by ID
   const fetchProductById = async (productId) => {
     setLoading(true);
     try {
@@ -48,6 +50,27 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  // ✅ Fetch products by filter: material or occasion
+  const fetchProductsByFilter = async (type, value) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `http://localhost:2525/user/products/filter/${type}/${value}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setProducts(res.data.products || []);
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch filtered products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAllProducts();
   }, []);
@@ -60,6 +83,7 @@ export const ProductProvider = ({ children }) => {
         error,
         fetchAllProducts,
         fetchProductById,
+        fetchProductsByFilter, // Exported function
       }}
     >
       {children}

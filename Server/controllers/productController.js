@@ -45,7 +45,7 @@ exports.addProduct = async (req, res) => {
           ? JSON.parse(req.body.filter)
           : req.body.filter,
       admin: req.admin._id, // authenticated admin
-      status: "draft", // Default status for new products
+      status: req.body.status || "draft", // Default status for new products
     };
 
     // Save to DB
@@ -98,6 +98,24 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
+exports.getActiveProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ status: 'active' });
+    
+    res.status(200).json({
+      success: true,
+      products,
+      count: products.length
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching active products",
+      error: error.message,
+    });
+  }
+};
+
 exports.getProductById = async (req, res) => {
   try {
     const productId = req.params.id;
@@ -113,6 +131,48 @@ exports.getProductById = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching product",
+      error: error.message,
+    });
+  }
+};
+
+exports.getProductsByFilter = async (req, res) => {
+  try {
+    const { type, value } = req.params;
+
+    if (!type || !value) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing type or value in params",
+      });
+    }
+
+    let filter = {
+      status: "active", // Only fetch active products
+    };
+
+    if (type === "material") {
+      filter["filter.material"] = { $regex: new RegExp(`^${value}$`, "i") }; // case-insensitive exact match
+    } else if (type === "occasion") {
+      filter["filter.occasion"] = { $regex: new RegExp(`^${value}$`, "i") }; // case-insensitive match in array
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid filter type. Must be 'material' or 'occasion'",
+      });
+    }
+
+    const products = await Product.find(filter);
+
+    res.status(200).json({
+      success: true,
+      products,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching products",
       error: error.message,
     });
   }

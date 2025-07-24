@@ -11,15 +11,6 @@ import {
 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
-const collections = [
-  { name: "New Arrivals", href: "/collections/new-arrivals" },
-  { name: "Wedding Collection", href: "/collections/wedding" },
-  { name: "Silk Sarees", href: "/collections/silk" },
-  { name: "Designer Collection", href: "/collections/designer" },
-  { name: "Casual Wear", href: "/collections/casual" },
-  { name: "Party Wear", href: "/collections/party" },
-];
-
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -67,47 +58,11 @@ const Navbar = () => {
               Shop
             </Link>
 
-            <Menu as="div" className="relative">
-              <Menu.Button className="flex items-center text-gray-700 hover:text-pink-600">
-                Collections
-                <FiChevronDown className="ml-1 w-4 h-4" />
-              </Menu.Button>
-              <Transition
-                enter="transition duration-100 ease-out"
-                enterFrom="transform scale-95 opacity-0"
-                enterTo="transform scale-100 opacity-100"
-                leave="transition duration-75 ease-out"
-                leaveFrom="transform scale-100 opacity-100"
-                leaveTo="transform scale-95 opacity-0"
-              >
-                <Menu.Items className="absolute left-0 mt-2 w-56 origin-top-left bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                  <div className="py-1">
-                    {collections.map((item) => (
-                      <Menu.Item key={item.name}>
-                        {({ active }) => (
-                          <Link
-                            to={item.href}
-                            className={`${
-                              active
-                                ? "bg-gray-100 text-pink-600"
-                                : "text-gray-700"
-                            } flex px-4 py-2 text-sm`}
-                          >
-                            {item.name}
-                          </Link>
-                        )}
-                      </Menu.Item>
-                    ))}
-                  </div>
-                </Menu.Items>
-              </Transition>
-            </Menu>
-
             <Link
-              to="/collections/new-arrivals"
+              to="/collections"
               className="text-gray-700 hover:text-pink-600"
             >
-              New Arrivals
+              Collections
             </Link>
           </div>
 

@@ -19,11 +19,86 @@ const UpdateProductForm = ({ onClose, product }) => {
       color: product.filter?.color || "",
     },
     inStock: product.inStock,
+    status: product.status || "draft",
   });
 
-  const materialOptions = ["Silk", "Cotton", "Georgette", "Chiffon", "Crepe"];
-  const occasionOptions = ["Wedding", "Party", "Casual", "Festival", "Office"];
-  const colorOptions = ["Red", "Blue", "Green", "Yellow", "Purple"];
+  const materialOptions = [
+    "Silk",
+    "Paithani Silk",
+    "Cotton",
+    "Georgette",
+    "Chiffon",
+    "Crepe",
+    "Linen",
+    "Wool",
+    "Satin",
+    "Velvet",
+    "Denim",
+    "Leather",
+    "Polyester",
+    "Rayon",
+    "Spandex",
+    "Cashmere",
+    "Jersey",
+    "Tulle",
+    "Organza",
+    "Taffeta",
+    "Brocade",
+  ];
+
+  const occasionOptions = [
+    "Wedding",
+    "Party",
+    "Casual",
+    "Festival",
+    "Office",
+    "Formal",
+    "Cocktail",
+    "Beach",
+    "Vacation",
+    "Date Night",
+    "Graduation",
+    "Prom",
+    "Bridal Shower",
+    "Baby Shower",
+    "Anniversary",
+    "Business Meeting",
+    "Interview",
+    "Brunch",
+    "Evening Out",
+    "Gala",
+  ];
+
+  const colorOptions = [
+    "Red",
+    "Magenta & Red",
+    "Blue",
+    "Green",
+    "Yellow",
+    "Purple",
+    "Black",
+    "White",
+    "Gray",
+    "Pink",
+    "Orange",
+    "Brown",
+    "Beige",
+    "Navy",
+    "Teal",
+    "Peacock",
+    "Maroon",
+    "Burgundy",
+    "Lavender",
+    "Mint",
+    "Olive",
+    "Turquoise",
+    "Gold",
+    "Silver",
+    "Rose Gold",
+    "Charcoal",
+    "Ivory",
+  ];
+  const statusOptions = ["draft", "active"];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,6 +159,7 @@ const UpdateProductForm = ({ onClose, product }) => {
     data.append("offerPercentage", formData.offerPercentage);
     data.append("availableQuantity", formData.availableQuantity);
     data.append("inStock", formData.inStock);
+    data.append("status", formData.status);
     data.append("description", JSON.stringify(formData.description));
     data.append("filter", JSON.stringify(formData.filter));
 
@@ -155,6 +231,36 @@ const UpdateProductForm = ({ onClose, product }) => {
                   onChange={handleChange}
                   className="w-full sm:w-[48%] p-2 border rounded focus:ring-2 focus:ring-pink-500"
                 />
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full sm:w-[48%] p-2 border rounded focus:ring-2 focus:ring-pink-500"
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </option>
+                  ))}
+                </select>
+                <div className="w-full sm:w-[48%] flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="inStock"
+                    name="inStock"
+                    checked={formData.inStock}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        inStock: e.target.checked,
+                      }))
+                    }
+                    className="h-5 w-5 accent-pink-500"
+                  />
+                  <label htmlFor="inStock" className="text-sm text-gray-700">
+                    In Stock
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -210,7 +316,10 @@ const UpdateProductForm = ({ onClose, product }) => {
                 </label>
                 <div className="flex flex-wrap gap-4">
                   {occasionOptions.map((occ) => (
-                    <label key={occ} className="text-sm flex items-center gap-2">
+                    <label
+                      key={occ}
+                      className="text-sm flex items-center gap-2"
+                    >
                       <input
                         type="checkbox"
                         value={occ}

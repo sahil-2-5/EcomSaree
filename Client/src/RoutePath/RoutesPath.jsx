@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes,Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Layout from "../components/layout/Layout";
 
 // User Pages
@@ -22,6 +22,7 @@ import ResetPassword from "../pages/auth/ResetPassword";
 
 // Account Pages
 import Account from "../pages/account/Account";
+import CollectionProduct from "../pages/shop/ColledtionProduct";
 
 const RoutesPath = () => {
   const location = useLocation();
@@ -60,13 +61,14 @@ const RoutesPath = () => {
           }
         />
         <Route
-          path="/collections/:category"
+          path="/collections/:filterType/:filterValue"
           element={
             <Layout>
-              <Collections />
+              <CollectionProduct />
             </Layout>
           }
         />
+
         <Route
           path="/product/:id"
           element={
