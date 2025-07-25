@@ -48,6 +48,12 @@ const {
   updateOrderStatus,
 } = require("../controllers/orderController");
 
+const {
+  getAllReviews,
+  updateReviewStatus,
+  deleteReview,
+} = require("../controllers/productReviewController")
+
 const { getAllCustomer } = require("../controllers/customerController");
 
 // Routes with `AuthAdminId` middleware require a valid token
@@ -105,5 +111,10 @@ router.put("/update-order-status/:orderId", AuthAdminId, updateOrderStatus);
 
 // Customer Routes
 router.get("/customer", AuthAdminId, getAllCustomer);
+
+// Product Review Routes
+router.get("/reviews", AuthAdminId, getAllReviews);
+router.put("/reviews/:reviewId/status", AuthAdminId, updateReviewStatus);
+router.delete("/reviews/:reviewId", AuthAdminId, deleteReview);
 
 module.exports = router;

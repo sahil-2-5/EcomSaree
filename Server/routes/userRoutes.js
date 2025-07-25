@@ -5,6 +5,7 @@ const {
   isAuthenticated,
 } = require("../middlewares/authClientMiddleware");
 const { validateEmail } = require("../validators/userValidator");
+const upload = require("../middlewares/multerMiddleware");
 
 // const {
 //   sendOtp,
@@ -36,7 +37,7 @@ const {
   getActiveProducts,
   getProductById,
   getProductsByFilter,
-  searchProducts
+  searchProducts,
 } = require("../controllers/productController");
 
 const {
@@ -62,6 +63,12 @@ const {
   verifyPayment,
   getMyOrders,
 } = require("../controllers/orderController");
+
+const {
+  createReview,
+  getReviewsByProduct,
+  getAllReviews,
+} = require("../controllers/productReviewController");
 
 // Routes with `AuthClientId` middleware require a valid token
 
@@ -112,6 +119,16 @@ router.delete("/wishlist/clear", AuthClientId, clearWishlist);
 router.post("/create-order", AuthClientId, createOrder);
 router.post("/verify-payment", AuthClientId, verifyPayment);
 router.get("/get-my-orders/:userId", AuthClientId, getMyOrders);
+
+// Product Review Routes
+router.post(
+  "/reviews/create",
+  AuthClientId,
+  upload.array("images"),
+  createReview
+);
+router.get("/reviews/product/:productId", AuthClientId, getReviewsByProduct);
+router.get("/reviews", AuthClientId, getAllReviews);
 
 // Banner Routes
 router.get("/banners", getActiveBanners);
