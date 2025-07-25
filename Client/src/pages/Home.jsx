@@ -1,18 +1,15 @@
 
 import Hero from '../components/home/Hero';
 import FeaturedProducts from '../components/home/FeaturedProducts';
-import TrendingSarees from '../components/home/TrendingSarees';
 import SareeCategories from '../components/home/SareeCategories';
 import Newsletter from '../components/home/Newsletter';
 import Testimonials from '../components/home/Testimonials';
-import InstagramFeed from '../components/home/InstagramFeed';
 
 const Home = () => {
   return (
     <div>
       <Hero />
       <FeaturedProducts />
-      <TrendingSarees />
       <SareeCategories />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-16">
@@ -88,7 +85,6 @@ const Home = () => {
       </div>
       <Testimonials />
       <Newsletter />
-      <InstagramFeed />
     </div>
   );
 };

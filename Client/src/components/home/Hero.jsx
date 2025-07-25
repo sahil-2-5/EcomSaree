@@ -121,16 +121,6 @@ const Hero = () => {
                               {banner.ctaText || "Shop Now"}
                             </Button>
                           </Link>
-
-                          <Link to="/collections/new-arrivals">
-                            <Button
-                              variant="secondary"
-                              size="lg"
-                              className="border-2 border-white/20 hover:bg-white/10 hover:border-white/40 transition-all duration-300 animate-fade-in-up [animation-delay:500ms]"
-                            >
-                              New Arrivals
-                            </Button>
-                          </Link>
                         </div>
                       </div>
                     </div>
