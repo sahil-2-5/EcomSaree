@@ -322,3 +322,35 @@ exports.deleteProduct = async (req, res) => {
     });
   }
 };
+
+exports.searchProducts = async (req, res) => {
+  try {
+    const { query } = req.params; // ⬅️ req.params to match route like /api/products/search/:query
+
+    if (!query) {
+      return res.status(400).json({ success: false, message: "Query is required" });
+    }
+
+    const regexQuery = new RegExp(query, "i"); // case-insensitive regex
+
+    const products = await Product.find({
+      $and: [
+        { status: "active" },
+        {
+          $or: [
+            { title: { $regex: regexQuery } },
+            { description: { $regex: regexQuery } },
+            { "filter.material": { $regex: regexQuery } },
+            { "filter.color": { $regex: regexQuery } },
+            { "filter.occasion": { $regex: regexQuery } },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json({ success: true, products });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};

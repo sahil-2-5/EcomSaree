@@ -7,15 +7,18 @@ import {
   FiHeart,
   FiUser,
   FiSearch,
-  FiChevronDown,
 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
+import { useProductContext } from "../../context/ProductContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredResults, setFilteredResults] = useState([]);
 
   const { isAuthenticated, user, logout } = useAuth();
+  const { searchProductsByQuery } = useProductContext();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -32,10 +35,33 @@ const Navbar = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 0);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (searchQuery.trim() === "") {
+        setFilteredResults([]);
+        return;
+      }
+      try {
+        const results = await searchProductsByQuery(searchQuery);
+        setFilteredResults(results?.slice(0, 6) || []);
+      } catch (err) {
+        console.error("Search error:", err);
+      }
+    };
+
+    const debounce = setTimeout(fetchSearchResults, 250);
+    return () => clearTimeout(debounce);
+  }, [searchQuery, searchProductsByQuery]);
+
+  const handleSearchSelect = (productId) => {
+    setSearchQuery("");
+    setFilteredResults([]);
+    navigate(`/product/${productId}`);
+  };
 
   return (
     <nav
@@ -46,37 +72,53 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="text-2xl font-bold text-pink-600">
-              BalajiPaithani
-            </Link>
-          </div>
+        <div className="flex justify-between h-16 items-center">
+          <Link to="/" className="text-2xl font-bold text-pink-600">
+            BalajiPaithani
+          </Link>
 
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/shop" className="text-gray-700 hover:text-pink-600">
               Shop
             </Link>
-
-            <Link
-              to="/collections"
-              className="text-gray-700 hover:text-pink-600"
-            >
+            <Link to="/collections" className="text-gray-700 hover:text-pink-600">
               Collections
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search sarees..."
-                className="w-64 pl-10 pr-4 py-2 rounded-lg border bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition duration-200"
-              />
-              <FiSearch className="absolute left-3 top-3 text-gray-400" />
-            </div>
+          {/* Desktop Search */}
+          <div className="hidden md:flex items-center relative w-1/3">
+            <input
+              type="text"
+              placeholder="Search sarees..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-pink-500 bg-white/60 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-pink-500 transition duration-200"
+            />
+            <FiSearch className="absolute left-3 top-3 text-gray-400" />
+            {filteredResults.length > 0 && (
+              <div className="absolute z-50 top-12 w-full bg-white rounded-md shadow-lg border max-h-64 overflow-auto">
+                {filteredResults.map((item) => (
+                  <div
+                    key={item._id}
+                    onMouseDown={() => handleSearchSelect(item._id)}
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-pink-50 cursor-pointer"
+                  >
+                    <img
+                      src={item?.images?.[0]?.url}
+                      alt={item.title}
+                      className="w-10 h-10 object-cover rounded"
+                    />
+                    <span className="text-sm text-gray-700 truncate w-[200px]">
+                      {item.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
+          {/* Desktop Icons */}
           <div className="hidden md:flex items-center space-x-6">
             <Link to="/wishlist" className="text-gray-700 hover:text-pink-600">
               <FiHeart className="w-6 h-6" />
@@ -88,17 +130,17 @@ const Navbar = () => {
             {isAuthenticated ? (
               <Menu as="div" className="relative">
                 <Menu.Button className="flex items-center text-gray-700 hover:text-pink-600">
-                  <FiUser className="w-6 h-6 mr-1" />
+                  <FiUser className="w-6 h-6" />
                 </Menu.Button>
                 <Transition
                   enter="transition duration-100 ease-out"
                   enterFrom="transform scale-95 opacity-0"
                   enterTo="transform scale-100 opacity-100"
-                  leave="transition duration-75 ease-out"
+                  leave="transition duration-75 ease-in"
                   leaveFrom="transform scale-100 opacity-100"
                   leaveTo="transform scale-95 opacity-0"
                 >
-                  <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                  <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50 focus:outline-none">
                     <div className="py-1">
                       {accountLinks.map((item) =>
                         item.onClick ? (
@@ -125,10 +167,7 @@ const Navbar = () => {
               </Menu>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link
-                  to="/login"
-                  className="text-gray-700 hover:text-pink-600 text-sm font-medium"
-                >
+                <Link to="/login" className="text-gray-700 hover:text-pink-600 text-sm font-medium">
                   Login
                 </Link>
                 <Link
@@ -141,6 +180,7 @@ const Navbar = () => {
             )}
           </div>
 
+          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -152,6 +192,7 @@ const Navbar = () => {
         </div>
       </div>
 
+      {/* Mobile Dropdown */}
       <Transition
         show={isMenuOpen}
         enter="transition duration-200 ease-out"
@@ -161,59 +202,83 @@ const Navbar = () => {
         leaveFrom="opacity-100 scale-100"
         leaveTo="opacity-0 scale-95"
       >
-        {() => (
-          <div className="md:hidden bg-white/95 backdrop-blur-sm border-t">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {isAuthenticated ? (
-                <div className="mb-4 border-b border-gray-200 pb-2">
-                  <div className="flex items-center px-3 py-2 text-gray-700">
-                    <FiUser className="w-5 h-5 mr-2" />
-                    <span className="font-medium">
-                      {user?.firstName || "My Account"}
-                    </span>
-                  </div>
-                  {accountLinks.map((item) =>
-                    item.onClick ? (
-                      <button
-                        key={item.name}
-                        onClick={item.onClick}
-                        className="block w-full text-left px-3 py-2 text-gray-700 hover:text-pink-600 rounded-md hover:bg-pink-50 transition duration-200 ml-8 text-sm"
-                      >
-                        {item.name}
-                      </button>
-                    ) : (
-                      <Link
-                        key={item.name}
-                        to={item.href}
-                        className="block px-3 py-2 text-gray-700 hover:text-pink-600 rounded-md hover:bg-pink-50 transition duration-200 ml-8 text-sm"
-                      >
-                        {item.name}
-                      </Link>
-                    )
-                  )}
-                </div>
-              ) : (
-                <div className="mt-4 border-t border-gray-200 pt-2">
-                  <Link
-                    to="/login"
-                    className="block px-3 py-2 text-gray-700 hover:text-pink-600 rounded-md hover:bg-pink-50 transition duration-200"
-                  >
-                    <div className="flex items-center">
-                      <FiUser className="w-5 h-5 mr-2" />
-                      <span>Login</span>
+        <div className="md:hidden bg-white/95 backdrop-blur-sm border-t">
+          <div className="px-4 pt-4 pb-3 space-y-2">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-pink-500 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+              />
+              {filteredResults.length > 0 && (
+                <div className="bg-white rounded-md shadow max-h-64 overflow-auto border mt-2 z-50 absolute w-full">
+                  {filteredResults.map((item) => (
+                    <div
+                      key={item._id}
+                      onMouseDown={() => handleSearchSelect(item._id)}
+                      className="flex items-center gap-3 px-4 py-2 hover:bg-pink-50 cursor-pointer"
+                    >
+                      <img
+                        src={item?.images?.[0]?.url}
+                        alt={item.title}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                      <span className="text-sm text-gray-700 truncate w-[200px]">
+                        {item.title}
+                      </span>
                     </div>
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="block px-3 py-2 text-pink-600 hover:text-pink-700 rounded-md bg-pink-50 hover:bg-pink-100 transition duration-200 mt-1"
-                  >
-                    <span className="font-medium">Register Now</span>
-                  </Link>
+                  ))}
                 </div>
               )}
             </div>
+
+            <Link to="/shop" className="block px-3 py-2 text-gray-700 hover:text-pink-600">
+              Shop
+            </Link>
+            <Link to="/collections" className="block px-3 py-2 text-gray-700 hover:text-pink-600">
+              Collections
+            </Link>
+
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center px-3 py-2 text-gray-700">
+                  <FiUser className="w-5 h-5 mr-2" />
+                  {user?.firstName || "My Account"}
+                </div>
+                {accountLinks.map((item) =>
+                  item.onClick ? (
+                    <button
+                      key={item.name}
+                      onClick={item.onClick}
+                      className="block w-full text-left px-3 py-2 text-gray-700 hover:text-pink-600"
+                    >
+                      {item.name}
+                    </button>
+                  ) : (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="block px-3 py-2 text-gray-700 hover:text-pink-600"
+                    >
+                      {item.name}
+                    </Link>
+                  )
+                )}
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="block px-3 py-2 text-gray-700 hover:text-pink-600">
+                  Login
+                </Link>
+                <Link to="/register" className="block px-3 py-2 text-pink-600 bg-pink-50 rounded-md">
+                  Register Now
+                </Link>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </Transition>
     </nav>
   );

@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-} from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
 const ProductContext = createContext();
@@ -71,6 +66,20 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  const searchProductsByQuery = async (query) => {
+    if (!query) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `http://localhost:2525/user/products/search/${query}`
+      );
+      return res.data.products || [];
+    } catch (err) {
+      console.error("Search failed:", err);
+      return [];
+    }
+  };
+
   useEffect(() => {
     fetchAllProducts();
   }, []);
@@ -84,6 +93,7 @@ export const ProductProvider = ({ children }) => {
         fetchAllProducts,
         fetchProductById,
         fetchProductsByFilter, // Exported function
+        searchProductsByQuery,
       }}
     >
       {children}

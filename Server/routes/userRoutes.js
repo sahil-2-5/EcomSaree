@@ -35,7 +35,8 @@ const {
 const {
   getActiveProducts,
   getProductById,
-  getProductsByFilter
+  getProductsByFilter,
+  searchProducts
 } = require("../controllers/productController");
 
 const {
@@ -91,6 +92,7 @@ router.delete("/delete-address/:addressId", AuthClientId, deleteAddress);
 router.get("/products", getActiveProducts);
 router.get("/product/:id", getProductById);
 router.get("/products/filter/:type/:value", getProductsByFilter);
+router.get("/products/search/:query", searchProducts);
 
 // Cart Routes
 router.post("/cart/add", AuthClientId, addToCart);
