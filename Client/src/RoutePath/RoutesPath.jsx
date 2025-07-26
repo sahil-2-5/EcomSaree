@@ -11,6 +11,7 @@ import Cart from "../pages/cart/Cart";
 import Checkout from "../pages/cart/Checkout";
 import OrderConfirmation from "../pages/cart/OrderConfirmation";
 import Wishlist from "../pages/wishlist/Wishlist";
+import GetAddress from "../pages/cart/GetAddress";
 
 // Auth Pages
 import Login from "../pages/auth/Login";
@@ -98,6 +99,14 @@ const RoutesPath = () => {
           element={
             <Layout>
               <OrderConfirmation />
+            </Layout>
+          }
+        />
+         <Route
+          path="/getaddress"
+          element={
+            <Layout>
+              <GetAddress />
             </Layout>
           }
         />

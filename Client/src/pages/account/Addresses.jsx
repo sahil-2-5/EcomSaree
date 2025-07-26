@@ -94,28 +94,19 @@ const Addresses = () => {
       {showAddForm && (
         <div className="border border-pink-200 rounded-lg p-4 mb-6 shadow-sm bg-pink-50">
           <div className="grid md:grid-cols-2 gap-4">
-            {Object.entries(newAddress).map(([key, value], i) =>
-              key !== "isDefault" ? (
-                <input
-                  key={i}
-                  type="text"
-                  name={key}
-                  placeholder={key.charAt(0).toUpperCase() + key.slice(1)}
-                  className="border rounded px-3 py-1 text-sm"
-                  value={value}
-                  onChange={handleNewChange}
-                />
-              ) : (
-                <label key={i} className="md:col-span-2 flex items-center gap-2 text-sm">
+            {Object.entries(newAddress).map(
+              ([key, value], i) =>
+                key !== "isDefault" ? (
                   <input
-                    type="checkbox"
-                    name="isDefault"
-                    checked={value}
+                    key={i}
+                    type="text"
+                    name={key}
+                    placeholder={key.charAt(0).toUpperCase() + key.slice(1)}
+                    className="border rounded px-3 py-1 text-sm"
+                    value={value}
                     onChange={handleNewChange}
                   />
-                  Set as Default Address
-                </label>
-              )
+                ) : null // Don't render the checkbox
             )}
           </div>
           <button
@@ -138,18 +129,21 @@ const Addresses = () => {
             >
               {editingId === address._id ? (
                 <>
-                  {Object.entries(editForm).map(([key, value], i) =>
-                    key !== "isDefault" ? (
-                      <input
-                        key={i}
-                        type="text"
-                        name={key}
-                        placeholder={key.charAt(0).toUpperCase() + key.slice(1)}
-                        className="w-full mb-2 border rounded px-3 py-1 text-sm"
-                        value={value}
-                        onChange={handleEditChange}
-                      />
-                    ) : null // hide isDefault in edit form
+                  {Object.entries(editForm).map(
+                    ([key, value], i) =>
+                      key !== "isDefault" ? (
+                        <input
+                          key={i}
+                          type="text"
+                          name={key}
+                          placeholder={
+                            key.charAt(0).toUpperCase() + key.slice(1)
+                          }
+                          className="w-full mb-2 border rounded px-3 py-1 text-sm"
+                          value={value}
+                          onChange={handleEditChange}
+                        />
+                      ) : null // hide isDefault in edit form
                   )}
                   <div className="flex gap-2 mt-3">
                     <button
@@ -188,16 +182,28 @@ const Addresses = () => {
                     </div>
                   </div>
                   <div className="space-y-1 text-sm text-gray-700">
-                    <p><span className="font-semibold">Phone:</span> {address.phone}</p>
-                    <p><span className="font-semibold">Address:</span> {address.address}</p>
+                    <p>
+                      <span className="font-semibold">Phone:</span>{" "}
+                      {address.phone}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Address:</span>{" "}
+                      {address.address}
+                    </p>
                     {address.apartment && (
-                      <p><span className="font-semibold">Apartment:</span> {address.apartment}</p>
+                      <p>
+                        <span className="font-semibold">Apartment:</span>{" "}
+                        {address.apartment}
+                      </p>
                     )}
                     <p>
                       <span className="font-semibold">City/State/Pincode:</span>{" "}
                       {address.city}, {address.state} - {address.pincode}
                     </p>
-                    <p><span className="font-semibold">Country:</span> {address.country}</p>
+                    <p>
+                      <span className="font-semibold">Country:</span>{" "}
+                      {address.country}
+                    </p>
                     {!address.isDefault && (
                       <button
                         onClick={() => handleSetDefault(address._id)}
