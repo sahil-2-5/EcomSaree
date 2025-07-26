@@ -1,21 +1,30 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { FiHeart, FiShare2 } from "react-icons/fi";
+import { FiHeart, FiShare2, FiX } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";
 import { useWishlistContext } from "../../context/WishlistContext";
 import Button from "../../components/common/Button";
 import ProductCard from "../../components/shop/ProductCard";
 import { useProductContext } from "../../context/ProductContext";
+import { useProductReviewContext } from "../../context/ProductReviewContext";
+import { FaStar } from "react-icons/fa";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { addToCart, fetchCart } = useCart();
   const { addToWishlist } = useWishlistContext();
   const { fetchProductById, products, loading, error } = useProductContext();
+  const { productReviews, getReviewsByProduct, createReview } = useProductReviewContext();
 
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity] = useState(1);
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(null);
+  const [comment, setComment] = useState("");
+  const [images, setImages] = useState([]);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
 
   useEffect(() => {
     const getProduct = async () => {
@@ -27,17 +36,8 @@ const ProductDetail = () => {
       }
     };
     getProduct();
+    getReviewsByProduct(id);
   }, [id]);
-
-  if (loading || !product)
-    return <div className="p-10 text-center text-lg font-semibold">Loading...</div>;
-
-  if (error)
-    return (
-      <div className="p-10 text-center text-red-600 font-semibold">
-        Error: {error}
-      </div>
-    );
 
   const handleAddToCart = async () => {
     const result = await addToCart(product._id, quantity);
@@ -70,7 +70,31 @@ const ProductDetail = () => {
     }
   };
 
-  // Dynamically filter related products
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("productId", product._id);
+    formData.append("rating", rating);
+    formData.append("comment", comment);
+    images.forEach((img) => formData.append("images", img));
+    await createReview(formData);
+    setRating(0);
+    setComment("");
+    setImages([]);
+    setFileInputKey(Date.now()); // Reset file input
+    await getReviewsByProduct(product._id);
+  };
+
+  if (loading || !product)
+    return <div className="p-10 text-center text-lg font-semibold">Loading...</div>;
+
+  if (error)
+    return (
+      <div className="p-10 text-center text-red-600 font-semibold">
+        Error: {error}
+      </div>
+    );
+
   const relatedProducts = products
     .filter(
       (p) =>
@@ -84,7 +108,7 @@ const ProductDetail = () => {
                 : product.filter?.occasion === o
             )))
     )
-    .slice(0, 4); // Limit to 4
+    .slice(0, 4);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50/30 to-white">
@@ -216,34 +240,151 @@ const ProductDetail = () => {
           </div>
         </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-24 border-t border-gray-100 pt-16">
-            <div className="flex items-center justify-between mb-12">
-              <div>
-                <span className="inline-block px-4 py-1.5 text-xs font-medium tracking-wide text-pink-700 uppercase bg-pink-50 rounded-full mb-4 border border-pink-100">
-                  Related Items
-                </span>
-                <h2 className="text-3xl font-bold text-gray-900">You May Also Like</h2>
+        {/* Product Review Section */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Leave a Review</h2>
+          <form onSubmit={handleReviewSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+              <div className="flex space-x-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    type="button"
+                    key={star}
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHover(star)}
+                    onMouseLeave={() => setHover(null)}
+                  >
+                    <FaStar
+                      size={24}
+                      className={
+                        (hover || rating) >= star
+                          ? "text-yellow-400"
+                          : "text-gray-300"
+                      }
+                    />
+                  </button>
+                ))}
               </div>
-              <a
-                href="/shop"
-                className="group inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-pink-600 hover:text-white bg-white hover:bg-pink-600 rounded-full shadow-sm hover:shadow-lg transition-all duration-300 border border-pink-100 hover:border-transparent"
-              >
-                View More
-                <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((item) => (
-                <ProductCard key={item._id} product={item} />
-              ))}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Comment</label>
+              <textarea
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={4}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Upload Images</label>
+              <input
+                key={fileInputKey}
+                type="file"
+                multiple
+                onChange={(e) => setImages(Array.from(e.target.files))}
+                className="mt-1 block w-full text-sm text-gray-500"
+                accept="image/*"
+              />
+            </div>
+
+            <Button type="submit" className="bg-pink-600 text-white px-6 py-2 rounded-md">
+              Submit Review
+            </Button>
+          </form>
+
+          {/* Display Reviews */}
+          <div className="mt-12">
+            <h3 className="text-xl font-semibold mb-4">Customer Reviews</h3>
+            {productReviews.length === 0 ? (
+              <p className="text-gray-500">No reviews yet.</p>
+            ) : (
+              <ul className="space-y-6">
+                {productReviews.map((review) => (
+                  <li 
+                    key={review._id} 
+                    className="border border-gray-100 p-4 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => setSelectedReview(review)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-medium text-gray-900">
+                        {review.user.firstName || 'Anonymous'} 
+                      </div>
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <FaStar
+                            key={i}
+                            size={16}
+                            className={i < review.rating ? "text-yellow-400" : "text-gray-300"}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-gray-700 text-sm line-clamp-2">{review.comment}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Review Detail Modal */}
+      {selectedReview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold">
+                  {selectedReview.user.firstName || 'Anonymous'}'s Review
+                </h3>
+                <button 
+                  onClick={() => setSelectedReview(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FiX size={24} />
+                </button>
+              </div>
+              
+              <div className="flex items-center mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <FaStar
+                    key={i}
+                    size={20}
+                    className={i < selectedReview.rating ? "text-yellow-400" : "text-gray-300"}
+                  />
+                ))}
+                <span className="ml-2 text-gray-600">{selectedReview.rating}/5</span>
+              </div>
+              
+              <p className="text-gray-700 mb-6">{selectedReview.comment}</p>
+              
+              {selectedReview.images?.length > 0 && (
+                <div className="aspect-w-16 aspect-h-9 mb-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedReview.images.map((img, index) => (
+                      <div key={index} className="rounded-lg overflow-hidden">
+                        <img
+                          src={img.url}
+                          alt="review-img"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="text-sm text-gray-500">
+                Reviewed on {new Date(selectedReview.createdAt).toLocaleDateString()}
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

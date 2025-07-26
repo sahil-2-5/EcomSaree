@@ -54,7 +54,7 @@ exports.getReviewsByProduct = async (req, res) => {
     const productId = req.params.productId;
 
     const reviews = await Review.find({ product: productId })
-      .populate("user", "name email");
+      .populate("user", "name email firstName lastName");
 
     res.status(200).json({
       success: true,
@@ -134,7 +134,7 @@ exports.deleteReview = async (req, res) => {
 exports.getAllReviews = async (req, res) => {
   try {
     const reviews = await Review.find()
-      .populate("user", "name email")
+      .populate("user", "name email firstName lastName")
       .populate("product", "title price");
 
     res.status(200).json({
