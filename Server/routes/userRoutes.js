@@ -68,6 +68,7 @@ const {
   createReview,
   getReviewsByProduct,
   getAllReviews,
+  getActiveReviews
 } = require("../controllers/productReviewController");
 
 // Routes with `AuthClientId` middleware require a valid token
@@ -129,6 +130,7 @@ router.post(
 );
 router.get("/reviews/product/:productId", AuthClientId, getReviewsByProduct);
 router.get("/reviews", AuthClientId, getAllReviews);
+router.get("/reviews/active", AuthClientId, getActiveReviews);
 
 // Banner Routes
 router.get("/banners", getActiveBanners);

@@ -59,7 +59,7 @@ export const ProductReviewProvider = ({ children }) => {
   const getAllReviews = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:2525/user/reviews", {
+      const response = await axios.get("http://localhost:2525/user/reviews/active", {
         withCredentials: true,
       });
 

@@ -7,13 +7,12 @@ import {
   FiShoppingBag,
   FiUsers,
   FiImage,
-  FiPackage,
-  FiBarChart2,
   FiMenu,
   FiX,
   FiLogIn,
   FiUserPlus,
   FiLogOut,
+  FiStar,
 } from "react-icons/fi";
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -24,6 +23,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { icon: FiShoppingBag, label: "Orders", path: "/admin/orders" },
     { icon: FiUsers, label: "Customers", path: "/admin/customers" },
     { icon: FiImage, label: "Banners", path: "/admin/banners" },
+    { icon: FiStar, label: "Reviews", path: "/admin/reviews" },
   ];
 
   const isActive = (path) => location.pathname === path;

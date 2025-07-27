@@ -150,3 +150,23 @@ exports.getAllReviews = async (req, res) => {
     });
   }
 };
+
+exports.getActiveReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ status: "active" })
+      .populate("user", "name email firstName lastName")
+      .populate("product", "title price");
+
+    res.status(200).json({
+      success: true,
+      message: "Active reviews fetched successfully",
+      reviews,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch active reviews",
+      error: error.message,
+    });
+  }
+};

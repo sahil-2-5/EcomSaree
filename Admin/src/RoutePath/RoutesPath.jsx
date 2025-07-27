@@ -6,6 +6,7 @@ import Products from "../pages/products/Products";
 import Orders from "../pages/orders/Orders";
 import Customers from "../pages/customers/Customers";
 import Banners from "../pages/banners/Banners";
+import ProductReview from "../pages/review/ProductReview";
 
 import Login from "../auth/Login";
 import Register from "../auth/Register";
@@ -24,6 +25,9 @@ const RoutesPath = () => {
         <Route path="/admin/orders" element={<Orders />} />
         <Route path="/admin/customers" element={<Customers />} />
         <Route path="/admin/banners" element={<Banners />} />
+        <Route path="/admin/reviews" element={<ProductReview />} />
+
+        {/* Auth Routes */}
 
         <Route path="/admin/login" element={<Login />} />
         <Route path="/admin/register" element={<Register />} />

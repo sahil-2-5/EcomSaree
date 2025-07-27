@@ -1,6 +1,6 @@
 // pages/admin/Customers.js
 import React, { useEffect, useState } from "react";
-import { FiEye, FiEdit2, FiTrash2, FiDownload, FiPlus } from "react-icons/fi";
+import { FiDownload, FiPlus } from "react-icons/fi";
 import AdminLayout from "../../components/admin/AdminPanel";
 import { useCustomerContext } from "../../context/CustomerContext";
 import ViewCustomerOrders from "../customers/ViewCustomerOrders";
