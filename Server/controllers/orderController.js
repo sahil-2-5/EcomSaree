@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const Order = require("../models/Order");
 const User = require("../models/User");
+const Product = require("../models/Product");
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
@@ -99,6 +100,7 @@ exports.verifyPayment = async (req, res) => {
         .json({ error: "Invalid signature, payment verification failed" });
     }
 
+    // Create the new order
     const newOrder = new Order({
       orderId: "ORDER-" + uuidv4().slice(0, 8).toUpperCase(),
       user: userId,
@@ -112,11 +114,22 @@ exports.verifyPayment = async (req, res) => {
       paidAt: new Date(),
     });
 
+    // Save the order
     await newOrder.save();
 
+    // Update user's orders list
     await User.findByIdAndUpdate(userId, {
       $push: { orders: newOrder.orderId },
     });
+
+    // Update product quantities
+    for (const item of items) {
+      await Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { availableQuantity: -item.quantity } },
+        { new: true }
+      );
+    }
 
     res.status(200).json({
       success: true,

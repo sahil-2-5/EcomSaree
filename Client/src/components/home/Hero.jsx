@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, EffectFade, Pagination } from "swiper/modules";
@@ -45,7 +45,52 @@ const Hero = () => {
   }
 
   return (
-    <div className="relative h-[700px] bg-gray-900 overflow-hidden">
+    <div className="relative h-[700px] mt-16 bg-gray-900 overflow-hidden">
+      {/* Full-width Marquee Banner Titles */}
+      {banners.length > 0 && (
+        <div className="absolute top-0 left-0 right-0 z-20 bg-black/70 backdrop-blur-sm py-3 overflow-hidden border-b border-purple-900/30">
+          <div className="relative w-full overflow-hidden">
+            <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none"></div>
+            
+            <div className="marquee-track">
+              <div className="marquee-content">
+                {/* Repeat each title 3 times */}
+                {[...Array(3)].map((_, repeatIndex) => (
+                  banners.map((banner, index) => (
+                    <span 
+                      key={`marquee-${banner._id}-${index}-${repeatIndex}`} 
+                      className="marquee-item"
+                    >
+                      <span className="inline-block px-2 py-1 bg-purple-900/30 rounded-md mx-2">
+                        {banner.title}
+                      </span>
+                      <span className="mx-4 text-purple-400 animate-pulse">◆</span>
+                    </span>
+                  ))
+                ))}
+              </div>
+              {/* Duplicate for seamless looping */}
+              <div className="marquee-content" aria-hidden="true">
+                {[...Array(3)].map((_, repeatIndex) => (
+                  banners.map((banner, index) => (
+                    <span 
+                      key={`marquee-duplicate-${banner._id}-${index}-${repeatIndex}`} 
+                      className="marquee-item"
+                    >
+                      <span className="inline-block px-2 py-1 bg-purple-900/30 rounded-md mx-2">
+                        {banner.title}
+                      </span>
+                      <span className="mx-4 text-purple-400 animate-pulse">◆</span>
+                    </span>
+                  ))
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Swiper
         modules={[Autoplay, EffectFade, Pagination]}
         effect="fade"
@@ -148,6 +193,42 @@ const Hero = () => {
         .animate-fade-in-up {
           animation: fadeInUp 0.8s ease-out forwards;
           opacity: 0;
+        }
+
+        .marquee-track {
+          display: flex;
+          width: 100%;
+          overflow: hidden;
+          white-space: nowrap;
+          position: relative;
+        }
+
+        .marquee-content {
+          display: flex;
+          flex-shrink: 0;
+          align-items: center;
+          justify-content: space-around;
+          min-width: 100%;
+          animation: marquee ${banners.length * 15}s linear infinite;
+        }
+
+        .marquee-item {
+          display: inline-flex;
+          align-items: center;
+          color: white;
+          font-size: 0.95rem;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        @keyframes marquee {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-100%);
+          }
         }
       `}</style>
     </div>
