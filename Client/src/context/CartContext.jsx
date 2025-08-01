@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "./AuthContext"; // Import the AuthContext
 
 const CartContext = createContext();
 
@@ -9,12 +10,24 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { isAuthenticated } = useAuth(); // Get auth state from AuthContext
 
+  // Fetch cart when component mounts and when auth state changes
   useEffect(() => {
-    fetchCart();
-  }, []);
+    if (isAuthenticated) {
+      fetchCart();
+    } else {
+      // Clear cart when user is not authenticated
+      setCart([]);
+    }
+  }, [isAuthenticated]);
 
   const fetchCart = async () => {
+    if (!isAuthenticated) {
+      setCart([]);
+      return { success: false, message: "User not authenticated" };
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -32,6 +45,12 @@ export const CartProvider = ({ children }) => {
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
       setError(errorMessage);
+      
+      // Clear cart if unauthorized
+      if (err.response?.status === 401) {
+        setCart([]);
+      }
+      
       return { success: false, message: errorMessage };
     } finally {
       setLoading(false);
@@ -39,6 +58,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const addToCart = async (productId, quantity = 1) => {
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        message: "Please login to add items to cart",
+        isAuthError: true,
+      };
+    }
+
     setLoading(true);
     setError(null);
 
@@ -54,23 +81,38 @@ export const CartProvider = ({ children }) => {
 
       const { success, message, cart } = response.data;
 
-      // Update cart only if item was newly added
       if (success) {
         setCart(cart.items);
       }
 
-      // Always return the backend's message
       return { success, message };
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
       setError(errorMessage);
-      return { success: false, message: errorMessage };
+      
+      if (err.response?.status === 401) {
+        setCart([]);
+      }
+      
+      return { 
+        success: false, 
+        message: errorMessage,
+        isAuthError: err.response?.status === 401
+      };
     } finally {
       setLoading(false);
     }
   };
 
   const updateCartItem = async (productId, quantity) => {
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        message: "Please login to update cart",
+        isAuthError: true,
+      };
+    }
+
     setLoading(true);
     setError(null);
 
@@ -90,7 +132,6 @@ export const CartProvider = ({ children }) => {
         throw new Error(data?.message || "Update failed");
       }
 
-      // Update cart items in context or state
       setCart(data.cart.items);
 
       return {
@@ -99,14 +140,16 @@ export const CartProvider = ({ children }) => {
       };
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
-
-      // Set error state (optional, for displaying on UI)
       setError(errorMessage);
-
-      // Return error to component (important for toast, alert, etc.)
+      
+      if (err.response?.status === 401) {
+        setCart([]);
+      }
+      
       return {
         success: false,
         message: errorMessage,
+        isAuthError: err.response?.status === 401
       };
     } finally {
       setLoading(false);
@@ -114,6 +157,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeCartItem = async (productId) => {
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        message: "Please login to modify cart",
+        isAuthError: true,
+      };
+    }
+
     setLoading(true);
     setError(null);
 
@@ -121,6 +172,7 @@ export const CartProvider = ({ children }) => {
       const confirmDelete = window.confirm(
         "Are you sure you want to remove this item from your cart?"
       );
+      if (!confirmDelete) return { success: false, message: "Cancelled" };
 
       const response = await axios.delete(
         `http://localhost:2525/user/cart/delete/${productId}`,
@@ -139,13 +191,30 @@ export const CartProvider = ({ children }) => {
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
       setError(errorMessage);
-      return { success: false, message: errorMessage };
+      
+      if (err.response?.status === 401) {
+        setCart([]);
+      }
+      
+      return {
+        success: false,
+        message: errorMessage,
+        isAuthError: err.response?.status === 401
+      };
     } finally {
       setLoading(false);
     }
   };
 
   const clearCart = async () => {
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        message: "Please login to modify cart",
+        isAuthError: true,
+      };
+    }
+
     setLoading(true);
     setError(null);
 
@@ -167,13 +236,30 @@ export const CartProvider = ({ children }) => {
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
       setError(errorMessage);
-      return { success: false, message: errorMessage };
+      
+      if (err.response?.status === 401) {
+        setCart([]);
+      }
+      
+      return {
+        success: false,
+        message: errorMessage,
+        isAuthError: err.response?.status === 401
+      };
     } finally {
       setLoading(false);
     }
   };
 
   const checkout = async () => {
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        message: "Please login to checkout",
+        isAuthError: true,
+      };
+    }
+
     setLoading(true);
     setError(null);
 
@@ -196,19 +282,30 @@ export const CartProvider = ({ children }) => {
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message;
       setError(errorMessage);
-      return { success: false, message: errorMessage };
+      
+      if (err.response?.status === 401) {
+        setCart([]);
+      }
+      
+      return {
+        success: false,
+        message: errorMessage,
+        isAuthError: err.response?.status === 401
+      };
     } finally {
       setLoading(false);
     }
   };
 
   const getTotalItems = () => {
+    if (!isAuthenticated) return 0;
     return cart.reduce((sum, item) => sum + item.quantity, 0);
   };
 
   const getCartTotal = () => {
+    if (!isAuthenticated) return 0;
     return cart.reduce((total, item) => {
-      return total + item.product.sellingPrice * item.quantity;
+      return total + (item.product?.sellingPrice || 0) * item.quantity;
     }, 0);
   };
 
@@ -218,6 +315,7 @@ export const CartProvider = ({ children }) => {
         cart,
         loading,
         error,
+        isAuthenticated, // Expose auth state to components
         addToCart,
         updateCartItem,
         removeCartItem,

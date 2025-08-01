@@ -128,9 +128,9 @@ router.post(
   upload.array("images"),
   createReview
 );
-router.get("/reviews/product/:productId", AuthClientId, getReviewsByProduct);
-router.get("/reviews", AuthClientId, getAllReviews);
-router.get("/reviews/active", AuthClientId, getActiveReviews);
+router.get("/reviews/product/:productId", getReviewsByProduct);
+router.get("/reviews", getAllReviews);
+router.get("/reviews/active", getActiveReviews);
 
 // Banner Routes
 router.get("/banners", getActiveBanners);

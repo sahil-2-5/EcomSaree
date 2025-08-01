@@ -8,6 +8,7 @@ import ProductCard from "../../components/shop/ProductCard";
 import { useProductContext } from "../../context/ProductContext";
 import { useProductReviewContext } from "../../context/ProductReviewContext";
 import { FaStar } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext"; // Import AuthContext
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -15,6 +16,7 @@ const ProductDetail = () => {
   const { addToWishlist } = useWishlistContext();
   const { fetchProductById, products, loading, error } = useProductContext();
   const { productReviews, getReviewsByProduct, createReview } = useProductReviewContext();
+  const { isAuthenticated } = useAuth(); // Get auth state
 
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -242,61 +244,66 @@ const ProductDetail = () => {
 
         {/* Product Review Section */}
         <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Leave a Review</h2>
-          <form onSubmit={handleReviewSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-              <div className="flex space-x-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    type="button"
-                    key={star}
-                    onClick={() => setRating(star)}
-                    onMouseEnter={() => setHover(star)}
-                    onMouseLeave={() => setHover(null)}
-                  >
-                    <FaStar
-                      size={24}
-                      className={
-                        (hover || rating) >= star
-                          ? "text-yellow-400"
-                          : "text-gray-300"
-                      }
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Only show review form if user is authenticated */}
+          {isAuthenticated && (
+            <>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Leave a Review</h2>
+              <form onSubmit={handleReviewSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                  <div className="flex space-x-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        type="button"
+                        key={star}
+                        onClick={() => setRating(star)}
+                        onMouseEnter={() => setHover(star)}
+                        onMouseLeave={() => setHover(null)}
+                      >
+                        <FaStar
+                          size={24}
+                          className={
+                            (hover || rating) >= star
+                              ? "text-yellow-400"
+                              : "text-gray-300"
+                          }
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Comment</label>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={4}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                required
-              />
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Comment</label>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    rows={4}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                    required
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Upload Images</label>
-              <input
-                key={fileInputKey}
-                type="file"
-                multiple
-                onChange={(e) => setImages(Array.from(e.target.files))}
-                className="mt-1 block w-full text-sm text-gray-500"
-                accept="image/*"
-              />
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Upload Images</label>
+                  <input
+                    key={fileInputKey}
+                    type="file"
+                    multiple
+                    onChange={(e) => setImages(Array.from(e.target.files))}
+                    className="mt-1 block w-full text-sm text-gray-500"
+                    accept="image/*"
+                  />
+                </div>
 
-            <Button type="submit" className="bg-pink-600 text-white px-6 py-2 rounded-md">
-              Submit Review
-            </Button>
-          </form>
+                <Button type="submit" className="bg-pink-600 text-white px-6 py-2 rounded-md">
+                  Submit Review
+                </Button>
+              </form>
+            </>
+          )}
 
-          {/* Display Reviews */}
+          {/* Display Reviews (visible to all users) */}
           <div className="mt-12">
             <h3 className="text-xl font-semibold mb-4">Customer Reviews</h3>
             {productReviews.length === 0 ? (

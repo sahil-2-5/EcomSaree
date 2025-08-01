@@ -167,7 +167,7 @@ const Dashboard = () => {
       // Calculate current month stats
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      
+
       // Completed orders (for sales calculation)
       const completedOrders = orders.filter(
         order => order.paymentStatus === 'completed' && order.isPaid
@@ -216,9 +216,9 @@ const Dashboard = () => {
       const productsChange = prevMonthProducts > 0 
         ? Math.round(((currentMonthProducts - prevMonthProducts) / prevMonthProducts) * 100) 
         : 100;
-      
+
       // Customers (estimated from orders)
-      const uniqueCustomers = [...new Set(orders.map(order => order.user?.toString()))].length;
+      const uniqueCustomers = [...new Set(orders.map(order => order.user._id?.toString()))].length;
       const currentMonthCustomers = [...new Set(
         currentMonthOrders.map(order => order.user?.toString())
       )].length;

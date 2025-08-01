@@ -10,6 +10,17 @@ const ViewCustomerOrders = ({
   // Calculate total orders count
   const totalOrdersCount = customerOrders?.length || 0;
 
+  // Safely get the first available image URL
+  const getProductImage = (product) => {
+    if (!product?.images || product.images.length === 0) {
+      return "https://via.placeholder.com/40?text=No+Image";
+    }
+    
+    // Handle both array of objects with url property and array of strings
+    const firstImage = product.images[0];
+    return typeof firstImage === 'string' ? firstImage : firstImage.url;
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[80vh] overflow-y-auto">
@@ -95,26 +106,32 @@ const ViewCustomerOrders = ({
                       </td>
                       <td className="p-3">
                         <div className="flex flex-col gap-2">
-                          {order.items.map((item, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <img
-                                src={item.product.images[index].url}
-                                alt={item.product.title}
-                                className="w-10 h-10 object-cover rounded"
-                                onError={(e) => {
-                                  e.target.src = "https://via.placeholder.com/40?text=No+Image";
-                                }}
-                              />
-                              <div>
-                                <p className="text-xs font-medium text-gray-800 line-clamp-1">
-                                  {item.product.title || 'Unknown Product'}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  ₹{item.price?.toLocaleString() || '0'}
-                                </p>
+                          {order.items.map((item, index) => {
+                            const productTitle = item.product?.title || 'Unknown Product';
+                            const productPrice = item.price?.toLocaleString() || '0';
+                            const imageUrl = getProductImage(item.product);
+                            
+                            return (
+                              <div key={index} className="flex items-center gap-2">
+                                <img
+                                  src={imageUrl}
+                                  alt={productTitle}
+                                  className="w-10 h-10 object-cover rounded"
+                                  onError={(e) => {
+                                    e.target.src = "https://via.placeholder.com/40?text=No+Image";
+                                  }}
+                                />
+                                <div>
+                                  <p className="text-xs font-medium text-gray-800 line-clamp-1">
+                                    {productTitle}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    ₹{productPrice}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </td>
                     </tr>

@@ -8,7 +8,10 @@ import {
   FiMapPin,
   FiCalendar,
   FiChevronDown,
+  FiFilter,
 } from "react-icons/fi";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import AdminLayout from "../../components/admin/AdminPanel";
 import { useOrderContext } from "../../context/OrderContext";
 import OrderDetailsModal from "./OrderDetailsModal";
@@ -17,6 +20,16 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateRangeFilter, setDateRangeFilter] = useState("all");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minItems, setMinItems] = useState("");
+  const [maxItems, setMaxItems] = useState("");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  
   const { 
     orders, 
     loading, 
@@ -39,7 +52,7 @@ const Orders = () => {
     cancelled: orders.filter((o) => o.orderStatus === "cancelled").length,
   };
 
-  // Filter orders based on search and status
+  // Filter orders based on search, status, and date range
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,21 +66,68 @@ const Orders = () => {
     const matchesStatus =
       statusFilter === "all" || order.orderStatus === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesDateRange = () => {
+      const orderDate = new Date(order.createdAt);
+      orderDate.setHours(0, 0, 0, 0);
+      
+      if (dateRangeFilter === "custom" && startDate && endDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        return orderDate >= start && orderDate <= end;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      switch (dateRangeFilter) {
+        case "today":
+          return orderDate.getTime() === today.getTime();
+        case "this-week":
+          const firstDayOfWeek = new Date(today);
+          firstDayOfWeek.setDate(today.getDate() - today.getDay());
+          return orderDate >= firstDayOfWeek;
+        case "this-month":
+          const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+          return orderDate >= firstDayOfMonth;
+        default:
+          return true;
+      }
+    };
+
+    const matchesPriceRange = () => {
+      const total = order.totalAmount;
+      const min = minPrice ? parseFloat(minPrice) : 0;
+      const max = maxPrice ? parseFloat(maxPrice) : Infinity;
+      return total >= min && total <= max;
+    };
+
+    const matchesItemsRange = () => {
+      const itemsCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
+      const min = minItems ? parseInt(minItems) : 0;
+      const max = maxItems ? parseInt(maxItems) : Infinity;
+      return itemsCount >= min && itemsCount <= max;
+    };
+
+    return (
+      matchesSearch && 
+      matchesStatus && 
+      matchesDateRange() && 
+      matchesPriceRange() && 
+      matchesItemsRange()
+    );
   });
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus);
-      // The context will automatically update the orders list
     } catch (err) {
       console.error("Failed to update order status:", err);
-      // Error is already handled by the context
     }
   };
 
   const handleExport = () => {
-    // Prepare data for export
     const dataToExport = filteredOrders.map((order) => ({
       "Order ID": order.orderId,
       "Customer Name": order.shippingAddress.name,
@@ -82,25 +142,14 @@ const Orders = () => {
       Phone: order.shippingAddress.phone,
     }));
 
-    // Create worksheet
     const ws = XLSX.utils.json_to_sheet(dataToExport);
-
-    // Set column widths
     const wscols = [
-      { wch: 15 }, // Order ID
-      { wch: 20 }, // Customer Name
-      { wch: 25 }, // Customer Email
-      { wch: 12 }, // Date
-      { wch: 8 }, // Items
-      { wch: 12 }, // Total Amount
-      { wch: 15 }, // Payment Method
-      { wch: 12 }, // Status
-      { wch: 40 }, // Address
-      { wch: 15 }, // Phone
+      { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 },
+      { wch: 8 }, { wch: 12 }, { wch: 15 }, { wch: 12 },
+      { wch: 40 }, { wch: 15 },
     ];
     ws["!cols"] = wscols;
 
-    // Format headers with bold style
     const headerRange = XLSX.utils.decode_range(ws["!ref"]);
     for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
       const headerCell = XLSX.utils.encode_cell({ r: headerRange.s.r, c: C });
@@ -108,25 +157,21 @@ const Orders = () => {
       ws[headerCell].s = { font: { bold: true } };
     }
 
-    // Format currency cells
     const range = XLSX.utils.decode_range(ws["!ref"]);
     for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-      const cell = XLSX.utils.encode_cell({ r: R, c: 5 }); // Column E (Total Amount)
+      const cell = XLSX.utils.encode_cell({ r: R, c: 5 });
       if (!ws[cell]) continue;
       ws[cell].z = "#,##0.00";
     }
 
-    // Create workbook
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Orders");
 
-    // Generate current date string for filename
     const today = new Date();
     const dateString = `${today.getFullYear()}-${(today.getMonth() + 1)
       .toString()
       .padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
 
-    // Export the file
     XLSX.writeFile(wb, `orders_${dateString}.xlsx`);
   };
 
@@ -137,28 +182,46 @@ const Orders = () => {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case "pending":
-        return "bg-gray-100 text-gray-800";
-      case "processing":
-        return "bg-yellow-100 text-yellow-800";
-      case "shipped":
-        return "bg-blue-100 text-blue-800";
-      case "delivered":
-        return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
+      case "pending": return "bg-gray-100 text-gray-800";
+      case "processing": return "bg-yellow-100 text-yellow-800";
+      case "shipped": return "bg-blue-100 text-blue-800";
+      case "delivered": return "bg-green-100 text-green-800";
+      case "cancelled": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
   const getPaymentMethodIcon = (method) => {
-    switch (method) {
-      case "razorpay":
-        return "UPI/Cards";
-      default:
-        return method;
+    return method === "razorpay" ? "UPI/Cards" : method;
+  };
+
+  const handleDateRangeChange = (value) => {
+    setDateRangeFilter(value);
+    if (value !== "custom") {
+      setStartDate(null);
+      setEndDate(null);
+      setShowDatePicker(false);
+    } else {
+      setShowDatePicker(true);
     }
+  };
+
+  const applyCustomDateRange = () => {
+    if (startDate && endDate) {
+      setShowDatePicker(false);
+    }
+  };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setDateRangeFilter("all");
+    setStartDate(null);
+    setEndDate(null);
+    setMinPrice("");
+    setMaxPrice("");
+    setMinItems("");
+    setMaxItems("");
   };
 
   if (loading) {
@@ -204,13 +267,22 @@ const Orders = () => {
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-          <button
-            onClick={handleExport}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-          >
-            <FiDownload className="w-5 h-5 mr-2" />
-            Export Orders
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <FiFilter className="w-4 h-4 mr-1" />
+              {showAdvancedFilters ? "Hide Filters" : "Advanced Filters"}
+            </button>
+            <button
+              onClick={handleExport}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <FiDownload className="w-5 h-5 mr-2" />
+              Export Orders
+            </button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -245,7 +317,7 @@ const Orders = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Basic Filters */}
         <div className="flex flex-wrap items-center gap-4">
           <input
             type="text"
@@ -266,13 +338,115 @@ const Orders = () => {
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          <select className="border px-3 py-2 rounded">
-            <option>Date Range</option>
-            <option>Today</option>
-            <option>This Week</option>
-            <option>This Month</option>
-          </select>
+          
+          <div className="relative">
+            <select 
+              className="border px-3 py-2 rounded"
+              value={dateRangeFilter}
+              onChange={(e) => handleDateRangeChange(e.target.value)}
+            >
+              <option value="all">All Dates</option>
+              <option value="today">Today</option>
+              <option value="this-week">This Week</option>
+              <option value="this-month">This Month</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            
+            {showDatePicker && (
+              <div className="absolute z-10 mt-2 bg-white p-4 rounded shadow-lg border border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <DatePicker
+                    selected={startDate}
+                    onChange={(date) => setStartDate(date)}
+                    selectsStart
+                    startDate={startDate}
+                    endDate={endDate}
+                    placeholderText="Start Date"
+                    className="border px-2 py-1 rounded"
+                  />
+                  <span>to</span>
+                  <DatePicker
+                    selected={endDate}
+                    onChange={(date) => setEndDate(date)}
+                    selectsEnd
+                    startDate={startDate}
+                    endDate={endDate}
+                    minDate={startDate}
+                    placeholderText="End Date"
+                    className="border px-2 py-1 rounded"
+                  />
+                </div>
+                <button
+                  onClick={applyCustomDateRange}
+                  className="w-full bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600"
+                  disabled={!startDate || !endDate}
+                >
+                  Apply
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Advanced Filters */}
+        {showAdvancedFilters && (
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Price Range (₹)</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    className="border px-3 py-2 rounded w-full"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    min="0"
+                  />
+                  <span>to</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    className="border px-3 py-2 rounded w-full"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    min={minPrice || "0"}
+                  />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Items Quantity</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    className="border px-3 py-2 rounded w-full"
+                    value={minItems}
+                    onChange={(e) => setMinItems(e.target.value)}
+                    min="0"
+                  />
+                  <span>to</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    className="border px-3 py-2 rounded w-full"
+                    value={maxItems}
+                    onChange={(e) => setMaxItems(e.target.value)}
+                    min={minItems || "0"}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={resetFilters}
+                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Reset All Filters
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Orders Table */}
         <div className="bg-white rounded-lg shadow overflow-x-auto">

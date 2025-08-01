@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "./AuthContext"; // Import the AuthContext
 
 const WishlistContext = createContext();
 
@@ -9,15 +10,26 @@ export const WishlistProvider = ({ children }) => {
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { user, isAuthenticated } = useAuth(); // Get auth state
 
-  // Fetch wishlist on initial load
+  // Fetch wishlist on initial load and when auth state changes
   useEffect(() => {
-    fetchWishlist();
-  }, []);
+    if (isAuthenticated) {
+      fetchWishlist();
+    } else {
+      // Clear wishlist when user is not authenticated
+      setWishlist([]);
+    }
+  }, [isAuthenticated]);
 
   const fetchWishlist = async () => {
+    if (!isAuthenticated) {
+      setWishlist([]);
+      return { success: false, message: "User not authenticated" };
+    }
+
     setLoading(true);
-    setError(null); // Reset error state
+    setError(null);
 
     try {
       const response = await axios.get("http://localhost:2525/user/wishlist", {
@@ -54,6 +66,14 @@ export const WishlistProvider = ({ children }) => {
   };
 
   const addToWishlist = async (productData) => {
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        message: "Please login to add items to wishlist",
+        isAuthError: true,
+      };
+    }
+
     setLoading(true);
     setError(null);
 
@@ -115,6 +135,14 @@ export const WishlistProvider = ({ children }) => {
   };
 
   const removeFromWishlist = async (productId) => {
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        message: "Please login to modify wishlist",
+        isAuthError: true,
+      };
+    }
+
     try {
       const confirmDelete = window.confirm(
         "Are you sure you want to remove this item from your wishlist?"
@@ -140,6 +168,14 @@ export const WishlistProvider = ({ children }) => {
   };
 
   const clearWishlist = async () => {
+    if (!isAuthenticated) {
+      return {
+        success: false,
+        message: "Please login to modify wishlist",
+        isAuthError: true,
+      };
+    }
+
     try {
       const response = await axios.delete(
         "http://localhost:2525/user/wishlist/clear",
@@ -160,6 +196,7 @@ export const WishlistProvider = ({ children }) => {
   };
 
   const isInWishlist = (productId) => {
+    if (!isAuthenticated) return false;
     return wishlist.some((item) => item.product._id === productId);
   };
 
@@ -173,7 +210,8 @@ export const WishlistProvider = ({ children }) => {
         removeFromWishlist,
         clearWishlist,
         isInWishlist,
-        fetchWishlist, // Expose fetch in case manual refresh is needed
+        fetchWishlist,
+        isAuthenticated, // Also expose auth state for components to check
       }}
     >
       {children}

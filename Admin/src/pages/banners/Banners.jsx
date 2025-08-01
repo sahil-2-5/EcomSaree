@@ -197,7 +197,6 @@ const Banners = () => {
                       title="Preview"
                       onClick={() => {
                         setSelectedBanner(banner);
-                        console.log("Previewing Banner:", banner);
                         setShowPreview(true);
                       }}
                     >
